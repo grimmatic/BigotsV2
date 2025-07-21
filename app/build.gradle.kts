@@ -36,7 +36,7 @@ android {
     }
     buildFeatures {
         compose = true
-        viewBinding=true
+        viewBinding = true
     }
 }
 
@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     testImplementation(libs.junit)
+    implementation("com.google.android.material:material:1.12.0")
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

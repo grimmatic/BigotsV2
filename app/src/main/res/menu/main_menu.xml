@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:title="Ara"
+        android:icon="@drawable/ic_search"
+        app:showAsAction="ifRoom"
+        app:actionViewClass="androidx.appcompat.widget.SearchView" />
+
+    <item
+        android:id="@+id/action_filter"
+        android:title="Filtrele"
+        android:icon="@drawable/ic_filter_list"
+        app:showAsAction="ifRoom">
+
+        <menu>
+            <item
+                android:id="@+id/filter_all"
+                android:title="Tümü"
+                android:checkable="true"
+                android:checked="true" />
+
+            <item
+                android:id="@+id/filter_alerts_only"
+                android:title="Sadece Alarmlar"
+                android:checkable="true" />
+
+            <item
+                android:id="@+id/filter_positive_only"
+                android:title="Sadece Pozitif"
+                android:checkable="true" />
+
+            <item
+                android:id="@+id/filter_negative_only"
+                android:title="Sadece Negatif"
+                android:checkable="true" />
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/action_sort"
+        android:title="Sırala"
+        android:icon="@drawable/ic_sort"
+        app:showAsAction="never">
+
+        <menu>
+            <item
+                android:id="@+id/sort_by_difference"
+                android:title="Fark Yüzdesine Göre"
+                android:checkable="true"
+                android:checked="true" />
+
+            <item
+                android:id="@+id/sort_by_name"
+                android:title="İsme Göre"
+                android:checkable="true" />
+
+            <item
+                android:id="@+id/sort_by_price"
+                android:title="Fiyata Göre"
+                android:checkable="true" />
+
+            <item
+                android:id="@+id/sort_by_volume"
+                android:title="Hacme Göre"
+                android:checkable="true" />
+        </menu>
+
+    </item>
+
+    <item
+        android:id="@+id/action_settings"
+        android:title="Ayarlar"
+        android:icon="@drawable/ic_settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_about"
+        android:title="Hakkında"
+        android:icon="@drawable/ic_info"
+        app:showAsAction="never" />
+
+</menu>
