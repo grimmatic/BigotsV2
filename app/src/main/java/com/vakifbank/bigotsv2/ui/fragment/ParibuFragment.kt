@@ -1,13 +1,10 @@
 package com.vakifbank.bigotsv2.ui.fragment
 
-import android.app.NotificationManager
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.app.NotificationCompat
-import com.vakifbank.bigotsv2.R
+import androidx.fragment.app.Fragment
 import com.vakifbank.bigotsv2.databinding.FragmentParibuBinding
 
 class ParibuFragment : Fragment() {

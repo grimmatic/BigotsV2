@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.Dark" parent="Theme.AppCompat.DayNight">
-    </style>
+    <style name="Theme.Dark" parent="Theme.AppCompat.DayNight"></style>
 
-    <style name="Theme.Light" parent="Theme.AppCompat.Light">
-    </style>
+    <style name="Theme.Light" parent="Theme.AppCompat.Light"></style>
 
     <style name="Theme.BigotsV2" parent="Theme.MaterialComponents.DayNight.NoActionBar">
         <item name="colorPrimary">@color/primary_color</item>
