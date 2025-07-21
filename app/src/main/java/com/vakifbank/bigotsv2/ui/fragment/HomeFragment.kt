@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.tabs.TabLayoutMediator
 import com.vakifbank.bigotsv2.HomeFragmentStateAdapter
@@ -46,9 +47,12 @@ class HomeFragment : Fragment() {
 
     private fun initViewPagerAdapter() {
         tabIcons = arrayListOf(
-            resources.getDrawable(R.drawable.paribu, null),
+            ContextCompat.getDrawable(requireContext(), R.drawable.paribu)!!,
+            ContextCompat.getDrawable(requireContext(), R.drawable.btcturk)!!,
+            ContextCompat.getDrawable(requireContext(), R.drawable.settings)!!
+           /* resources.getDrawable(R.drawable.paribu, null),
             resources.getDrawable(R.drawable.btcturk, null),
-            resources.getDrawable(R.drawable.settings, null)
+            resources.getDrawable(R.drawable.settings, null)*/
         )
 
         val viewPager = binding.vpHome
@@ -82,7 +86,7 @@ class HomeFragment : Fragment() {
         //     binding.statusIndicator.setBackgroundResource(R.drawable.circle_red)
         // } else {
         //     startService()
-        //     binding.fabStartStop.setImageResource(R.drawable.ic_pause)
+        //     binding.fabStartStop.setImageResource(R.drawable.ic_stop)
         //     binding.tvServiceStatus.text = "Çalışıyor"
         //     binding.statusIndicator.setBackgroundResource(R.drawable.circle_green)
         // }
