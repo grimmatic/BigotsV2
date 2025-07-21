@@ -1,0 +1,39 @@
+package com.vakifbank.bigotsv2.ui.fragment
+
+import android.app.NotificationManager
+import android.os.Bundle
+import androidx.fragment.app.Fragment
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.core.app.NotificationCompat
+import com.vakifbank.bigotsv2.R
+import com.vakifbank.bigotsv2.databinding.FragmentParibuBinding
+
+class ParibuFragment : Fragment() {
+    private var _binding: FragmentParibuBinding? = null
+    private val binding get() = _binding!!
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        _binding = FragmentParibuBinding.inflate(inflater, container, false)
+        return binding.root
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
+
+    }
+}
