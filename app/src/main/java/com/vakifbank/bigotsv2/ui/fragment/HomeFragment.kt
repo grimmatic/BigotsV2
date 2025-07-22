@@ -12,7 +12,6 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayoutMediator
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.R
-import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
@@ -24,7 +23,7 @@ class HomeFragment : Fragment() {
     private lateinit var adapter: HomeFragmentStateAdapter
 
     private val viewModel: MainViewModel by viewModels {
-        MainViewModelFactory(CryptoRepository())
+        MainViewModelFactory()
     }
 
     override fun onCreateView(
@@ -108,9 +107,10 @@ class HomeFragment : Fragment() {
 
         val btcCoin = state.coinList.find { it.symbol == "BTC" }
         currentBinding.tvBtcPrice.text = btcCoin?.let {
-            "$${String.format("%.2f", it.binancePrice / state.usdTryRate)}"
+            if (state.usdTryRate > 0) {
+                "$${String.format("%.2f", it.binancePrice / state.usdTryRate)}"
+            } else "$0.00"
         } ?: "$0.00"
-
 
         currentBinding.tvUsdTryRate.text = "₺${String.format("%.2f", state.usdTryRate)}"
 

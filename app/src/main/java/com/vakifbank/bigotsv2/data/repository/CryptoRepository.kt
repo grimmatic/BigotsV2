@@ -14,7 +14,18 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CryptoRepository {
+class CryptoRepository private constructor() {
+
+    companion object {
+        @Volatile
+        private var INSTANCE: CryptoRepository? = null
+
+        fun getInstance(): CryptoRepository {
+            return INSTANCE ?: synchronized(this) {
+                INSTANCE ?: CryptoRepository().also { INSTANCE = it }
+            }
+        }
+    }
 
     private val _coinDataList = MutableStateFlow<List<CoinData>>(emptyList())
     val coinDataList: Flow<List<CoinData>> = _coinDataList.asStateFlow()
@@ -39,6 +50,8 @@ class CryptoRepository {
 
     suspend fun fetchAllData() {
         try {
+            Log.d("CryptoRepository", "Starting data fetch...")
+
             coroutineScope {
                 val paribuDeferred = async { fetchParibuData() }
                 val binanceDeferred = async { fetchBinanceData() }
@@ -48,14 +61,23 @@ class CryptoRepository {
                 val binanceData = binanceDeferred.await()
                 val btcturkData = btcturkDeferred.await()
 
+                Log.d("CryptoRepository", "Paribu data size: ${paribuData.size}")
+                Log.d("CryptoRepository", "Binance data size: ${binanceData.size}")
+                Log.d("CryptoRepository", "BtcTurk data size: ${btcturkData.size}")
+
                 paribuData["USDT_TL"]?.let { usdtTicker ->
                     _usdTryRate.value = usdtTicker.lowestAsk
+                    Log.d("CryptoRepository", "USD/TRY Rate: ${usdtTicker.lowestAsk}")
                 }
 
                 val updatedCoins = calculateArbitrage(paribuData, binanceData, btcturkData)
+                Log.d("CryptoRepository", "Updated coins count: ${updatedCoins.size}")
+
                 _coinDataList.value = updatedCoins
 
                 val opportunities = findArbitrageOpportunities(updatedCoins)
+                Log.d("CryptoRepository", "Arbitrage opportunities: ${opportunities.size}")
+
                 _arbitrageOpportunities.value = opportunities
             }
         } catch (e: Exception) {
@@ -65,9 +87,12 @@ class CryptoRepository {
 
     private suspend fun fetchParibuData(): Map<String, ParibuTicker> {
         return try {
+            Log.d("CryptoRepository", "Fetching Paribu data...")
             val response = ApiClient.paribuApi.getTickers()
             if (response.isSuccessful) {
-                response.body() ?: emptyMap()
+                val data = response.body() ?: emptyMap()
+                Log.d("CryptoRepository", "Paribu success: ${data.size} tickers")
+                data
             } else {
                 Log.e("CryptoRepository", "Paribu API error: ${response.code()}")
                 emptyMap()
@@ -80,9 +105,12 @@ class CryptoRepository {
 
     private suspend fun fetchBinanceData(): Map<String, BinanceTickerResponse> {
         return try {
+            Log.d("CryptoRepository", "Fetching Binance data...")
             val response = ApiClient.binanceApi.getBookTickers()
             if (response.isSuccessful) {
-                response.body()?.associateBy { it.symbol } ?: emptyMap()
+                val data = response.body()?.associateBy { it.symbol } ?: emptyMap()
+                Log.d("CryptoRepository", "Binance success: ${data.size} tickers")
+                data
             } else {
                 Log.e("CryptoRepository", "Binance API error: ${response.code()}")
                 emptyMap()
@@ -95,9 +123,12 @@ class CryptoRepository {
 
     private suspend fun fetchBtcTurkData(): Map<String, BtcTurkTicker> {
         return try {
+            Log.d("CryptoRepository", "Fetching BtcTurk data...")
             val response = ApiClient.btcturkApi.getTickers()
             if (response.isSuccessful) {
-                response.body()?.data?.associateBy { it.pair } ?: emptyMap()
+                val data = response.body()?.data?.associateBy { it.pair } ?: emptyMap()
+                Log.d("CryptoRepository", "BtcTurk success: ${data.size} tickers")
+                data
             } else {
                 Log.e("CryptoRepository", "BtcTurk API error: ${response.code()}")
                 emptyMap()
@@ -114,6 +145,7 @@ class CryptoRepository {
         btcturkData: Map<String, BtcTurkTicker>
     ): List<CoinData> {
         val usdTryRate = _usdTryRate.value
+        Log.d("CryptoRepository", "Calculating arbitrage with USD/TRY rate: $usdTryRate")
 
         return supportedCoins.mapNotNull { coinSymbol ->
             try {
@@ -125,7 +157,7 @@ class CryptoRepository {
                 // Binance fiyatı (USD cinsinden)
                 val binanceUsdPrice =
                     binanceData["${baseSymbol}USDT"]?.askPrice?.toDoubleOrNull() ?: 0.0
-                val binanceTlPrice = binanceUsdPrice * usdTryRate
+                val binanceTlPrice = if (usdTryRate > 0) binanceUsdPrice * usdTryRate else 0.0
 
                 // BtcTurk fiyatı
                 val btcturkSymbol = coinSymbol.replace("_TL", "_TRY").replace("_", "")
@@ -140,7 +172,7 @@ class CryptoRepository {
                     ((btcturkPrice - binanceTlPrice) * 100.0) / btcturkPrice
                 } else 0.0
 
-                CoinData(
+                val coin = CoinData(
                     symbol = baseSymbol,
                     name = baseSymbol,
                     paribuPrice = paribuPrice,
@@ -149,6 +181,9 @@ class CryptoRepository {
                     paribuDifference = paribuDifference,
                     btcturkDifference = btcturkDifference
                 )
+
+                Log.d("CryptoRepository", "Coin: ${coin.symbol}, Paribu: ${coin.paribuPrice}, Binance: ${coin.binancePrice}, BTCTurk: ${coin.btcturkPrice}")
+                coin
             } catch (e: Exception) {
                 Log.e("CryptoRepository", "Error calculating arbitrage for $coinSymbol", e)
                 null

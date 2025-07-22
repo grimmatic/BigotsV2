@@ -21,7 +21,7 @@ class BtcturkFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: MainViewModel by activityViewModels {
-        MainViewModelFactory(CryptoRepository())
+        MainViewModelFactory()
     }
 
     private lateinit var coinAdapter: CoinAdapter

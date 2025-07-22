@@ -22,6 +22,7 @@ class MainViewModel(
 
     init {
         observeData()
+        refreshData()
     }
 
     private fun observeData() {
@@ -45,6 +46,13 @@ class MainViewModel(
         }
     }
 
+    fun refreshData() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            repository.fetchAllData()
+        }
+    }
+
     fun toggleService(context: android.content.Context) {
         viewModelScope.launch {
             if (_uiState.value.isServiceRunning) {
@@ -57,8 +65,6 @@ class MainViewModel(
 
     fun updateThreshold(coinSymbol: String, threshold: Double) {
         viewModelScope.launch {
-            // SharedPreferences'a kaydet
-            // Coin listesini güncelle
         }
     }
 
@@ -90,13 +96,11 @@ enum class FilterType {
     ALL, ALERTS_ONLY, POSITIVE_ONLY, NEGATIVE_ONLY
 }
 
-class MainViewModelFactory(
-    private val repository: CryptoRepository
-) : ViewModelProvider.Factory {
+class MainViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(repository) as T
+            return MainViewModel(CryptoRepository.getInstance()) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }

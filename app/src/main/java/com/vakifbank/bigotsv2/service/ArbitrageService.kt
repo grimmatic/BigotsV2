@@ -48,14 +48,16 @@ class ArbitrageService : Service() {
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val repository = CryptoRepository()
+    private val repository = CryptoRepository.getInstance()
     private var updateJob: Job? = null
+    private var notificationJob: Job? = null
 
     override fun onCreate() {
         super.onCreate()
         createNotificationChannel()
         startForegroundService()
         startDataCollection()
+        startNotificationUpdates()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -67,6 +69,7 @@ class ArbitrageService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         updateJob?.cancel()
+        notificationJob?.cancel()
         serviceScope.cancel()
     }
 
@@ -75,11 +78,11 @@ class ArbitrageService : Service() {
             val channel = NotificationChannel(
                 CryptoArbitrageApplication.NOTIFICATION_CHANNEL_ID,
                 CryptoArbitrageApplication.NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_LOW
             ).apply {
                 description = "Arbitraj fırsatları bildirimleri"
-                enableLights(true)
-                enableVibration(true)
+                enableLights(false)
+                enableVibration(false)
                 setSound(null, null)
             }
 
@@ -104,12 +107,6 @@ class ArbitrageService : Service() {
 
     private fun startDataCollection() {
         updateJob = serviceScope.launch {
-            launch {
-                repository.arbitrageOpportunities.collect { opportunities ->
-                    updateNotification(opportunities)
-                }
-            }
-
             while (isActive) {
                 try {
                     repository.fetchAllData()
@@ -117,6 +114,14 @@ class ArbitrageService : Service() {
                 } catch (e: Exception) {
                     delay(5000)
                 }
+            }
+        }
+    }
+
+    private fun startNotificationUpdates() {
+        notificationJob = serviceScope.launch {
+            repository.arbitrageOpportunities.collect { opportunities ->
+                updateNotification(opportunities)
             }
         }
     }
@@ -138,8 +143,10 @@ class ArbitrageService : Service() {
             .setContentIntent(pendingIntent)
             .setOngoing(true)
             .setAutoCancel(false)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
+            .setSilent(true)
+            .setOnlyAlertOnce(true)
             .build()
     }
 
