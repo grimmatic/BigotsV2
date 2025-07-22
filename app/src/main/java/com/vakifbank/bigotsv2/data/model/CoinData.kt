@@ -8,7 +8,7 @@ data class CoinData(
     val binancePrice: Double = 0.0,
     val paribuDifference: Double = 0.0,
     val btcturkDifference: Double = 0.0,
-    val alertThreshold: Double = 2.5,
+    var alertThreshold: Double = 2.5,
     val soundLevel: Int = 15,
     val isAlertActive: Boolean = false
 )

@@ -1,6 +1,7 @@
 package com.vakifbank.bigotsv2.data.repository
 
 import android.util.Log
+import com.vakifbank.bigotsv2.data.Config
 import com.vakifbank.bigotsv2.data.api.ApiClient
 import com.vakifbank.bigotsv2.data.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.data.model.BinanceTickerResponse
@@ -8,24 +9,14 @@ import com.vakifbank.bigotsv2.data.model.BtcTurkTicker
 import com.vakifbank.bigotsv2.data.model.CoinData
 import com.vakifbank.bigotsv2.data.model.Exchange
 import com.vakifbank.bigotsv2.data.model.ParibuTicker
+import com.vakifbank.bigotsv2.data.model.Result
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CryptoRepository private constructor() {
-
-    companion object {
-        @Volatile
-        private var INSTANCE: CryptoRepository? = null
-
-        fun getInstance(): CryptoRepository {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: CryptoRepository().also { INSTANCE = it }
-            }
-        }
-    }
+class CryptoRepository {
 
     private val _coinDataList = MutableStateFlow<List<CoinData>>(emptyList())
     val coinDataList: Flow<List<CoinData>> = _coinDataList.asStateFlow()
@@ -37,18 +28,17 @@ class CryptoRepository private constructor() {
     private val _usdTryRate = MutableStateFlow(0.0)
     val usdTryRate: Flow<Double> = _usdTryRate.asStateFlow()
 
-    private val supportedCoins = listOf(
-        "DOT_TL", "AVAX_TL", "TRX_TL", "EOS_TL", "BTTC_TL", "XRP_TL", "XLM_TL",
-        "ONT_TL", "ATOM_TL", "HOT_TL", "NEO_TL", "BAT_TL", "CHZ_TL", "UNI_TL",
-        "BAL_TL", "AAVE_TL", "LINK_TL", "MKR_TL", "W_TL", "RAY_TL", "LRC_TL",
-        "BAND_TL", "ALGO_TL", "GRT_TL", "ENJ_TL", "THETA_TL", "MATIC_TL",
-        "OXT_TL", "CRV_TL", "OGN_TL", "MANA_TL", "MIOTA_TL", "SOL_TL",
-        "APE_TL", "VET_TL", "ANKR_TL", "SHIB_TL", "LPT_TL", "INJ_TL",
-        "ICP_TL", "FTM_TL", "AXS_TL", "ENS_TL", "SAND_TL", "AUDIO_TL",
-        "BTC_TL", "ETH_TL"
-    )
+    private val supportedCoins = Config.supportedCoins
+    private var lastFetchTime = 0L
+    private val cacheDuration = 10000 // 10 seconds
 
     suspend fun fetchAllData() {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastFetchTime < cacheDuration) {
+            Log.d("CryptoRepository", "Using cached data")
+            return
+        }
+        lastFetchTime = currentTime
         try {
             Log.d("CryptoRepository", "Starting data fetch...")
 
@@ -57,9 +47,14 @@ class CryptoRepository private constructor() {
                 val binanceDeferred = async { fetchBinanceData() }
                 val btcturkDeferred = async { fetchBtcTurkData() }
 
-                val paribuData = paribuDeferred.await()
-                val binanceData = binanceDeferred.await()
-                val btcturkData = btcturkDeferred.await()
+                val paribuResult = paribuDeferred.await()
+                val binanceResult = binanceDeferred.await()
+                val btcturkResult = btcturkDeferred.await()
+
+                val paribuData = if (paribuResult is Result.Success) paribuResult.data else emptyMap()
+                val binanceData = if (binanceResult is Result.Success) binanceResult.data else emptyMap()
+                val btcturkData = if (btcturkResult is Result.Success) btcturkResult.data else emptyMap()
+
 
                 Log.d("CryptoRepository", "Paribu data size: ${paribuData.size}")
                 Log.d("CryptoRepository", "Binance data size: ${binanceData.size}")
@@ -85,57 +80,57 @@ class CryptoRepository private constructor() {
         }
     }
 
-    private suspend fun fetchParibuData(): Map<String, ParibuTicker> {
+    private suspend fun fetchParibuData(): Result<Map<String, ParibuTicker>> {
         return try {
             Log.d("CryptoRepository", "Fetching Paribu data...")
             val response = ApiClient.paribuApi.getTickers()
             if (response.isSuccessful) {
                 val data = response.body() ?: emptyMap()
                 Log.d("CryptoRepository", "Paribu success: ${data.size} tickers")
-                data
+                Result.Success(data)
             } else {
                 Log.e("CryptoRepository", "Paribu API error: ${response.code()}")
-                emptyMap()
+                Result.Error(Exception("Paribu API error: ${response.code()}"))
             }
         } catch (e: Exception) {
             Log.e("CryptoRepository", "Paribu fetch error", e)
-            emptyMap()
+            Result.Error(e)
         }
     }
 
-    private suspend fun fetchBinanceData(): Map<String, BinanceTickerResponse> {
+    private suspend fun fetchBinanceData(): Result<Map<String, BinanceTickerResponse>> {
         return try {
             Log.d("CryptoRepository", "Fetching Binance data...")
             val response = ApiClient.binanceApi.getBookTickers()
             if (response.isSuccessful) {
                 val data = response.body()?.associateBy { it.symbol } ?: emptyMap()
                 Log.d("CryptoRepository", "Binance success: ${data.size} tickers")
-                data
+                Result.Success(data)
             } else {
                 Log.e("CryptoRepository", "Binance API error: ${response.code()}")
-                emptyMap()
+                Result.Error(Exception("Binance API error: ${response.code()}"))
             }
         } catch (e: Exception) {
             Log.e("CryptoRepository", "Binance fetch error", e)
-            emptyMap()
+            Result.Error(e)
         }
     }
 
-    private suspend fun fetchBtcTurkData(): Map<String, BtcTurkTicker> {
+    private suspend fun fetchBtcTurkData(): Result<Map<String, BtcTurkTicker>> {
         return try {
             Log.d("CryptoRepository", "Fetching BtcTurk data...")
             val response = ApiClient.btcturkApi.getTickers()
             if (response.isSuccessful) {
                 val data = response.body()?.data?.associateBy { it.pair } ?: emptyMap()
                 Log.d("CryptoRepository", "BtcTurk success: ${data.size} tickers")
-                data
+                Result.Success(data)
             } else {
                 Log.e("CryptoRepository", "BtcTurk API error: ${response.code()}")
-                emptyMap()
+                Result.Error(Exception("BtcTurk API error: ${response.code()}"))
             }
         } catch (e: Exception) {
             Log.e("CryptoRepository", "BtcTurk fetch error", e)
-            emptyMap()
+            Result.Error(e)
         }
     }
 
@@ -151,26 +146,12 @@ class CryptoRepository private constructor() {
             try {
                 val baseSymbol = coinSymbol.replace("_TL", "").replace("_TRY", "")
 
-                // Paribu fiyatı
-                val paribuPrice = paribuData[coinSymbol]?.highestBid ?: 0.0
+                val paribuPrice = getParibuPrice(paribuData, coinSymbol)
+                val binanceTlPrice = getBinanceTlPrice(binanceData, baseSymbol, usdTryRate)
+                val btcturkPrice = getBtcTurkPrice(btcturkData, coinSymbol)
 
-                // Binance fiyatı (USD cinsinden)
-                val binanceUsdPrice =
-                    binanceData["${baseSymbol}USDT"]?.askPrice?.toDoubleOrNull() ?: 0.0
-                val binanceTlPrice = if (usdTryRate > 0) binanceUsdPrice * usdTryRate else 0.0
-
-                // BtcTurk fiyatı
-                val btcturkSymbol = coinSymbol.replace("_TL", "_TRY").replace("_", "")
-                val btcturkPrice = btcturkData[btcturkSymbol]?.bid ?: 0.0
-
-                // Arbitraj hesaplamaları
-                val paribuDifference = if (paribuPrice > 0 && binanceTlPrice > 0) {
-                    ((paribuPrice - binanceTlPrice) * 100.0) / paribuPrice
-                } else 0.0
-
-                val btcturkDifference = if (btcturkPrice > 0 && binanceTlPrice > 0) {
-                    ((btcturkPrice - binanceTlPrice) * 100.0) / btcturkPrice
-                } else 0.0
+                val paribuDifference = calculateDifference(paribuPrice, binanceTlPrice)
+                val btcturkDifference = calculateDifference(btcturkPrice, binanceTlPrice)
 
                 val coin = CoinData(
                     symbol = baseSymbol,
@@ -189,6 +170,26 @@ class CryptoRepository private constructor() {
                 null
             }
         }
+    }
+
+    private fun getParibuPrice(paribuData: Map<String, ParibuTicker>, coinSymbol: String): Double {
+        return paribuData[coinSymbol]?.highestBid ?: 0.0
+    }
+
+    private fun getBinanceTlPrice(binanceData: Map<String, BinanceTickerResponse>, baseSymbol: String, usdTryRate: Double): Double {
+        val binanceUsdPrice = binanceData["${baseSymbol}USDT"]?.askPrice?.toDoubleOrNull() ?: 0.0
+        return if (usdTryRate > 0) binanceUsdPrice * usdTryRate else 0.0
+    }
+
+    private fun getBtcTurkPrice(btcturkData: Map<String, BtcTurkTicker>, coinSymbol: String): Double {
+        val btcturkSymbol = coinSymbol.replace("_TL", "_TRY").replace("_", "")
+        return btcturkData[btcturkSymbol]?.bid ?: 0.0
+    }
+
+    private fun calculateDifference(price1: Double, price2: Double): Double {
+        return if (price1 > 0 && price2 > 0) {
+            ((price1 - price2) * 100.0) / price1
+        } else 0.0
     }
 
     private fun findArbitrageOpportunities(coins: List<CoinData>): List<ArbitrageOpportunity> {
@@ -219,5 +220,21 @@ class CryptoRepository private constructor() {
         }
 
         return opportunities.sortedByDescending { kotlin.math.abs(it.difference) }
+    }
+
+    fun updateThreshold(coinSymbol: String, threshold: Double) {
+        val currentList = _coinDataList.value.toMutableList()
+        val coinIndex = currentList.indexOfFirst { it.symbol == coinSymbol }
+        if (coinIndex != -1) {
+            val updatedCoin = currentList[coinIndex].copy(alertThreshold = threshold)
+            currentList[coinIndex] = updatedCoin
+            _coinDataList.value = currentList
+        }
+    }
+
+    fun updateAllThresholds(threshold: Double) {
+        val currentList = _coinDataList.value.toMutableList()
+        val updatedList = currentList.map { it.copy(alertThreshold = threshold) }
+        _coinDataList.value = updatedList
     }
 }

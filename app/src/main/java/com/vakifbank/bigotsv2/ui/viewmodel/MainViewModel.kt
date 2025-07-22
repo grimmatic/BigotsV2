@@ -65,6 +65,13 @@ class MainViewModel(
 
     fun updateThreshold(coinSymbol: String, threshold: Double) {
         viewModelScope.launch {
+            repository.updateThreshold(coinSymbol, threshold)
+        }
+    }
+
+    fun updateAllThresholds(threshold: Double) {
+        viewModelScope.launch {
+            repository.updateAllThresholds(threshold)
         }
     }
 
@@ -100,7 +107,7 @@ class MainViewModelFactory : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")
-            return MainViewModel(CryptoRepository.getInstance()) as T
+            return MainViewModel(CryptoRepository()) as T
         }
         throw IllegalArgumentException("Unknown ViewModel class")
     }
