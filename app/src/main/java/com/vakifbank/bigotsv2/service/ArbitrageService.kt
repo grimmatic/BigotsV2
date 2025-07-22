@@ -163,8 +163,8 @@ class ArbitrageService : Service() {
                         else -> "Unknown"
                     }
 
-                    val sign = if (opportunity.isPositive) "+" else ""
-                    append("${index + 1}. ${opportunity.coin.symbol} ")
+                    val sign = if (opportunity.isPositive!!) "+" else ""
+                    append("${index + 1}. ${opportunity.coin?.symbol} ")
                     append("($exchangeName): $sign%.2f%%".format(opportunity.difference))
 
                     if (index < top3.size - 1) append(" | ")

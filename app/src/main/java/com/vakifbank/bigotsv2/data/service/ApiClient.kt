@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2.data.api
+package com.vakifbank.bigotsv2.data.service
 
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor

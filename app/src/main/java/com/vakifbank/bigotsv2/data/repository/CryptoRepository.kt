@@ -1,13 +1,13 @@
 package com.vakifbank.bigotsv2.data.repository
 
 import android.util.Log
-import com.vakifbank.bigotsv2.data.api.ApiClient
+import com.vakifbank.bigotsv2.data.service.ApiClient
 import com.vakifbank.bigotsv2.data.model.ArbitrageOpportunity
-import com.vakifbank.bigotsv2.data.model.BinanceTickerResponse
-import com.vakifbank.bigotsv2.data.model.BtcTurkTicker
+import com.vakifbank.bigotsv2.data.model.binance.BinanceTickerResponse
+import com.vakifbank.bigotsv2.data.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.data.model.CoinData
 import com.vakifbank.bigotsv2.data.model.Exchange
-import com.vakifbank.bigotsv2.data.model.ParibuTicker
+import com.vakifbank.bigotsv2.data.model.paribu.ParibuTicker
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -66,7 +66,7 @@ class CryptoRepository private constructor() {
                 Log.d("CryptoRepository", "BtcTurk data size: ${btcturkData.size}")
 
                 paribuData["USDT_TL"]?.let { usdtTicker ->
-                    _usdTryRate.value = usdtTicker.lowestAsk
+                    _usdTryRate.value = usdtTicker.lowestAsk!!
                     Log.d("CryptoRepository", "USD/TRY Rate: ${usdtTicker.lowestAsk}")
                 }
 
@@ -103,7 +103,7 @@ class CryptoRepository private constructor() {
         }
     }
 
-    private suspend fun fetchBinanceData(): Map<String, BinanceTickerResponse> {
+    private suspend fun fetchBinanceData(): Map<String?, BinanceTickerResponse> {
         return try {
             Log.d("CryptoRepository", "Fetching Binance data...")
             val response = ApiClient.binanceApi.getBookTickers()
@@ -121,7 +121,7 @@ class CryptoRepository private constructor() {
         }
     }
 
-    private suspend fun fetchBtcTurkData(): Map<String, BtcTurkTicker> {
+    private suspend fun fetchBtcTurkData(): Map<String?, BtcTurkTicker> {
         return try {
             Log.d("CryptoRepository", "Fetching BtcTurk data...")
             val response = ApiClient.btcturkApi.getTickers()
@@ -141,8 +141,8 @@ class CryptoRepository private constructor() {
 
     private fun calculateArbitrage(
         paribuData: Map<String, ParibuTicker>,
-        binanceData: Map<String, BinanceTickerResponse>,
-        btcturkData: Map<String, BtcTurkTicker>
+        binanceData: Map<String?, BinanceTickerResponse>,
+        btcturkData: Map<String?, BtcTurkTicker>
     ): List<CoinData> {
         val usdTryRate = _usdTryRate.value
         Log.d("CryptoRepository", "Calculating arbitrage with USD/TRY rate: $usdTryRate")
@@ -195,7 +195,7 @@ class CryptoRepository private constructor() {
         val opportunities = mutableListOf<ArbitrageOpportunity>()
 
         coins.forEach { coin ->
-            if (kotlin.math.abs(coin.paribuDifference) > coin.alertThreshold) {
+            if (kotlin.math.abs(coin.paribuDifference!!) > coin.alertThreshold!!) {
                 opportunities.add(
                     ArbitrageOpportunity(
                         coin = coin,
@@ -206,7 +206,7 @@ class CryptoRepository private constructor() {
                 )
             }
 
-            if (kotlin.math.abs(coin.btcturkDifference) > coin.alertThreshold) {
+            if (kotlin.math.abs(coin.btcturkDifference!!) > coin.alertThreshold) {
                 opportunities.add(
                     ArbitrageOpportunity(
                         coin = coin,
@@ -218,6 +218,6 @@ class CryptoRepository private constructor() {
             }
         }
 
-        return opportunities.sortedByDescending { kotlin.math.abs(it.difference) }
+        return opportunities.sortedByDescending { kotlin.math.abs(it.difference!!) }
     }
 }

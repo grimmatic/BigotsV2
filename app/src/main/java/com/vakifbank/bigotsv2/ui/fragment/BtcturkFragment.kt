@@ -63,8 +63,8 @@ class BtcturkFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 val btcturkCoins = state.coinList.filter { coin ->
-                    coin.btcturkPrice > 0 && kotlin.math.abs(coin.btcturkDifference) >= 0.1
-                }.sortedByDescending { kotlin.math.abs(it.btcturkDifference) }
+                    coin.btcturkPrice!! > 0 && kotlin.math.abs(coin.btcturkDifference!!) >= 0.1
+                }.sortedByDescending { it.btcturkDifference?.let { x -> kotlin.math.abs(x) } }
 
                 coinAdapter.submitList(btcturkCoins)
 

@@ -108,7 +108,7 @@ class HomeFragment : Fragment() {
         val btcCoin = state.coinList.find { it.symbol == "BTC" }
         currentBinding.tvBtcPrice.text = btcCoin?.let {
             if (state.usdTryRate > 0) {
-                "$${String.format("%.2f", it.binancePrice / state.usdTryRate)}"
+                "$${String.format("%.2f", it.binancePrice?.div(state.usdTryRate))}"
             } else "$0.00"
         } ?: "$0.00"
 

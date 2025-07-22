@@ -65,8 +65,8 @@ class ParibuFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.uiState.collect { state ->
                 val paribuCoins = state.coinList.filter { coin ->
-                    coin.paribuPrice > 0 && kotlin.math.abs(coin.paribuDifference) >= 0.1
-                }.sortedByDescending { kotlin.math.abs(it.paribuDifference) }
+                    coin.paribuPrice!! > 0 && kotlin.math.abs(coin.paribuDifference!!) >= 0.1
+                }.sortedByDescending { it.paribuDifference?.let { x -> kotlin.math.abs(x) } }
 
                 coinAdapter.submitList(paribuCoins)
 
