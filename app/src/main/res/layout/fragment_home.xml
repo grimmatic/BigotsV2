@@ -25,10 +25,10 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 android:background="@color/primary_color"
-                app:title="Bigots"
-                app:titleTextColor="@color/white"
                 app:menu="@menu/main_menu"
-                app:navigationIconTint="@color/white" />
+                app:navigationIconTint="@color/white"
+                app:title="Bigots"
+                app:titleTextColor="@color/white" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -108,8 +108,8 @@
                         <LinearLayout
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal">
 
                             <View
                                 android:id="@+id/statusIndicator"
@@ -151,23 +151,23 @@
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:layout_marginBottom="8dp"
                         android:text="Alarm Eşiği (%)"
                         android:textColor="@color/text_primary"
                         android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="8dp" />
+                        android:textStyle="bold" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
 
                         <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
                             app:boxStrokeColor="@color/primary_color"
                             app:hintTextColor="@color/primary_color">
 
@@ -177,19 +177,20 @@
                                 android:layout_height="wrap_content"
                                 android:hint="2.5"
                                 android:inputType="numberDecimal"
+                                android:textColor="@color/black"
                                 android:textSize="16sp" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnSetAllThresholds"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                             android:layout_width="wrap_content"
                             android:layout_height="56dp"
                             android:text="Tümüne Uygula"
                             android:textSize="12sp"
                             app:icon="@drawable/ic_edit"
-                            app:iconSize="18dp"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+                            app:iconSize="18dp" />
 
                     </LinearLayout>
 
@@ -211,12 +212,12 @@
             android:layout_height="wrap_content"
             android:background="@color/background_secondary"
             android:elevation="8dp"
-            app:tabIndicatorColor="@color/primary_color"
-            app:tabSelectedTextColor="@color/primary_color"
-            app:tabTextColor="@color/text_secondary"
-            app:tabMode="fixed"
             app:tabGravity="fill"
-            app:tabInlineLabel="true" />
+            app:tabIndicatorColor="@color/primary_color"
+            app:tabInlineLabel="true"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="@color/primary_color"
+            app:tabTextColor="@color/text_secondary" />
 
     </LinearLayout>
 
@@ -228,7 +229,7 @@
         android:layout_marginEnd="16dp"
         android:layout_marginBottom="80dp"
         android:src="@drawable/ic_play_arrow"
-        app:tint="@color/white"
-        app:backgroundTint="@color/primary_color" />
+        app:backgroundTint="@color/primary_color"
+        app:tint="@color/white" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

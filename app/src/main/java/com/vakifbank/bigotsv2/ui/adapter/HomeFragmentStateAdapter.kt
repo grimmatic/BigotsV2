@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2
+package com.vakifbank.bigotsv2.ui.adapter
 
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager

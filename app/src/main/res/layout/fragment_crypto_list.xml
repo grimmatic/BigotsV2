@@ -69,6 +69,7 @@
     </com.google.android.material.card.MaterialCardView>
 
     <LinearLayout
+        android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
@@ -86,10 +87,11 @@
             android:textStyle="bold" />
 
         <TextView
+            android:id="@+id/tvHeaderExchange"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1.5"
-            android:text="Paribu"
+            android:text="Exchange"
             android:textColor="@color/text_secondary"
             android:textSize="12sp"
             android:textStyle="bold"
