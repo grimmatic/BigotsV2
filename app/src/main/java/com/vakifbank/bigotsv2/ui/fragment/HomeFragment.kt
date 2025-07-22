@@ -10,9 +10,9 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayoutMediator
-import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.R
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
+import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
 import kotlinx.coroutines.launch

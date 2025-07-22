@@ -10,7 +10,6 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.vakifbank.bigotsv2.data.model.CoinData
 import com.vakifbank.bigotsv2.data.model.Exchange
-import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
@@ -42,7 +41,7 @@ class ParibuFragment : Fragment() {
 
         binding.ivExchangeLogo.setImageResource(com.vakifbank.bigotsv2.R.drawable.paribu)
         binding.tvExchangeName.text = "Paribu"
-        binding.tvHeaderExchange.text="Paribu"
+        binding.tvHeaderExchange.text = "Paribu"
     }
 
     private fun setupRecyclerView() {

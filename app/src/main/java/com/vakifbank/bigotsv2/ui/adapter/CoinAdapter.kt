@@ -9,7 +9,6 @@ import androidx.recyclerview.widget.RecyclerView
 import com.vakifbank.bigotsv2.R
 import com.vakifbank.bigotsv2.data.model.CoinData
 import com.vakifbank.bigotsv2.databinding.ItemCoinBinding
-import kotlin.apply
 import kotlin.math.abs
 
 class CoinAdapter(
@@ -41,7 +40,8 @@ class CoinAdapter(
                 tvBinancePriceUsd.text = "$${String.format("%.2f", coin.binancePrice?.div(34.0))}"
 
                 // En yüksek arbitraj farkını göster
-                val maxDifference = maxOf(abs(coin.paribuDifference!!), abs(coin.btcturkDifference!!))
+                val maxDifference =
+                    maxOf(abs(coin.paribuDifference!!), abs(coin.btcturkDifference!!))
                 val isPositive = coin.paribuDifference!! > 0 || coin.btcturkDifference!! > 0
 
                 tvPriceDifference.text =

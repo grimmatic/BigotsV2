@@ -14,6 +14,7 @@ interface BinanceApiService {
     @GET("api/v3/ticker/bookTicker")
     suspend fun getBookTickers(): Response<List<BinanceTickerResponse>>
 }
+
 interface BtcTurkApiService {
     @GET("api/v2/ticker")
     suspend fun getTickers(): Response<BtcTurkResponse>
