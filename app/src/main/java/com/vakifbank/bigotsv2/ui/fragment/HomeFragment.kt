@@ -89,6 +89,7 @@ class HomeFragment : Fragment() {
         currentBinding.btnSetAllThresholds.setOnClickListener {
             val thresholdText = currentBinding.etThreshold.text.toString()
             val threshold = thresholdText.toDoubleOrNull() ?: 2.5
+            viewModel.updateAllThresholds(threshold)
         }
     }
 
