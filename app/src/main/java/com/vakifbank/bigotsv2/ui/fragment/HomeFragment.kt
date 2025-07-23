@@ -15,6 +15,7 @@ import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
+import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -74,7 +75,8 @@ class HomeFragment : Fragment() {
 
         currentBinding.btnSetAllThresholds.setOnClickListener {
             val thresholdText = currentBinding.etThreshold.text.toString()
-            val threshold = thresholdText.toDoubleOrNull() ?: 2.5
+            val threshold =
+                thresholdText.toDoubleOrNull() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
         }
     }
 
@@ -91,6 +93,7 @@ class HomeFragment : Fragment() {
     private fun updateUI(state: com.vakifbank.bigotsv2.ui.viewmodel.MainUiState) {
         val currentBinding = _binding ?: return
 
+
         val btcCoin = state.coinList.find { it.symbol == "BTC" }
         currentBinding.tvBtcPrice.text = btcCoin?.let {
             if (state.usdTryRate > 0) {
@@ -100,14 +103,18 @@ class HomeFragment : Fragment() {
 
         currentBinding.tvUsdTryRate.text = "₺${String.format("%.2f", state.usdTryRate)}"
 
-        if (state.isServiceRunning) {
-            currentBinding.fabStartStop.setImageResource(R.drawable.ic_stop)
-            currentBinding.tvServiceStatus.text = "Çalışıyor"
-            currentBinding.statusIndicator.setBackgroundResource(R.drawable.circle_green)
-        } else {
-            currentBinding.fabStartStop.setImageResource(R.drawable.ic_play_arrow)
-            currentBinding.tvServiceStatus.text = "Durduruldu"
-            currentBinding.statusIndicator.setBackgroundResource(R.drawable.circle_red)
+        if (state.isServiceRunning)
+            currentBinding.run {
+                fabStartStop.setImageResource(R.drawable.ic_stop)
+                tvServiceStatus.text = "Çalışıyor"
+                statusIndicator.setBackgroundResource(R.drawable.circle_green)
+            }
+        else {
+            currentBinding.run {
+                fabStartStop.setImageResource(R.drawable.ic_play_arrow)
+                tvServiceStatus.text = "Durduruldu"
+                statusIndicator.setBackgroundResource(R.drawable.circle_red)
+            }
         }
     }
 
