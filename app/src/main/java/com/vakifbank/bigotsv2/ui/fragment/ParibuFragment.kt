@@ -6,15 +6,16 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.vakifbank.bigotsv2.data.model.CoinData
-import com.vakifbank.bigotsv2.data.model.Exchange
 import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
-import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.ui.viewmodel.ParibuViewModel
+import com.vakifbank.bigotsv2.ui.viewmodel.ParibuViewModelFactory
 import com.vakifbank.bigotsv2.utils.updateEmptyState
 import kotlinx.coroutines.launch
 
@@ -22,8 +23,12 @@ class ParibuFragment : Fragment() {
     private var _binding: FragmentCryptoListBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MainViewModel by activityViewModels {
+    private val mainViewModel: MainViewModel by activityViewModels {
         MainViewModelFactory()
+    }
+
+    private val paribuViewModel: ParibuViewModel by viewModels {
+        ParibuViewModelFactory()
     }
 
     private lateinit var coinAdapter: CoinAdapter
@@ -39,21 +44,26 @@ class ParibuFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        observeViewModel()
+        setupUI()
+        observeViewModels()
+    }
 
-        binding.ivExchangeLogo.setImageResource(com.vakifbank.bigotsv2.R.drawable.paribu)
-        binding.tvExchangeName.text = Constants.ExchangeNames.PARIBU
-        binding.tvHeaderExchange.text = Constants.ExchangeNames.PARIBU
+    private fun setupUI() {
+        binding.run {
+            ivExchangeLogo.setImageResource(paribuViewModel.getExchangeIcon())
+            tvExchangeName.text = paribuViewModel.getExchangeName()
+            tvHeaderExchange.text = paribuViewModel.getExchangeName()}
     }
 
     private fun setupRecyclerView() {
         coinAdapter = CoinAdapter(
             onCoinClick = { coin ->
-                showCoinDetailDialog(coin)
+                paribuViewModel.showCoinDetailDialog(coin)
             },
             onMoreClick = { coin ->
-                showCoinOptionsMenu(coin)
-            }
+                paribuViewModel.showCoinOptionsMenu(coin)
+            },
+            exchangeType = CoinAdapter.ExchangeType.PARIBU
         )
 
         binding.recyclerViewCoins.apply {
@@ -62,31 +72,29 @@ class ParibuFragment : Fragment() {
         }
     }
 
-    private fun observeViewModel() {
+    private fun observeViewModels() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                val paribuCoins = state.coinList.filter { coin ->
-                    coin.paribuPrice!! > 0 && kotlin.math.abs(coin.paribuDifference!!) >= 0.1
-                }.sortedByDescending { it.paribuDifference?.let { x -> kotlin.math.abs(x) } }
+            paribuViewModel.uiState.collect { paribuState ->
+                coinAdapter.submitList(paribuState.coinList)
 
-                coinAdapter.submitList(paribuCoins)
+                binding.updateEmptyState(paribuState.coinList, paribuState.isLoading)
+                binding.tvActiveAlerts.text = paribuViewModel.getActiveAlertText()
 
-                binding.updateEmptyState(paribuCoins, state.isLoading)
-
-                val alertCount = state.arbitrageOpportunities.count {
-                    it.exchange == Exchange.PARIBU
+                paribuState.selectedCoin?.let { coin ->
+                    if (paribuState.showOptionsMenu) {
+                        showCoinOptionsMenu(coin)
+                    } else {
+                        showCoinDetailDialog(coin)
+                    }
                 }
-                binding.tvActiveAlerts.text = "$alertCount aktif alarm"
             }
         }
     }
 
     private fun showCoinDetailDialog(coin: CoinData) {
-
     }
 
     private fun showCoinOptionsMenu(coin: CoinData) {
-
     }
 
     override fun onDestroyView() {

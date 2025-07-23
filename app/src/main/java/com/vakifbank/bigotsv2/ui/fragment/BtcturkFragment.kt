@@ -5,15 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.vakifbank.bigotsv2.data.model.Exchange
+import com.vakifbank.bigotsv2.data.model.CoinData
 import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
-import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
-import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
-import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.ui.viewmodel.BtcturkViewModel
+import com.vakifbank.bigotsv2.ui.viewmodel.BtcturkViewModelFactory
 import com.vakifbank.bigotsv2.utils.updateEmptyState
 import kotlinx.coroutines.launch
 
@@ -21,8 +20,8 @@ class BtcturkFragment : Fragment() {
     private var _binding: FragmentCryptoListBinding? = null
     private val binding get() = _binding!!
 
-    private val viewModel: MainViewModel by activityViewModels {
-        MainViewModelFactory()
+    private val btcturkViewModel: BtcturkViewModel by viewModels {
+        BtcturkViewModelFactory()
     }
 
     private lateinit var coinAdapter: CoinAdapter
@@ -38,19 +37,23 @@ class BtcturkFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
+        setupUI()
         observeViewModel()
+    }
 
-        binding.ivExchangeLogo.setImageResource(com.vakifbank.bigotsv2.R.drawable.btcturk)
-        binding.tvExchangeName.text = Constants.ExchangeNames.BTCTURK
-        binding.tvHeaderExchange.text = Constants.ExchangeNames.BTCTURK
-
+    private fun setupUI() {
+        binding.ivExchangeLogo.setImageResource(btcturkViewModel.getExchangeIcon())
+        binding.tvExchangeName.text = btcturkViewModel.getExchangeName()
+        binding.tvHeaderExchange.text = btcturkViewModel.getExchangeName()
     }
 
     private fun setupRecyclerView() {
         coinAdapter = CoinAdapter(
             onCoinClick = { coin ->
+                btcturkViewModel.showCoinDetailDialog(coin)
             },
             onMoreClick = { coin ->
+                btcturkViewModel.showCoinOptionsMenu(coin)
             }
         )
 
@@ -62,20 +65,27 @@ class BtcturkFragment : Fragment() {
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                val btcturkCoins = state.coinList.filter { coin ->
-                    coin.btcturkPrice!! > 0 && kotlin.math.abs(coin.btcturkDifference!!) >= 0.1
-                }.sortedByDescending { it.btcturkDifference?.let { x -> kotlin.math.abs(x) } }
+            btcturkViewModel.uiState.collect { state ->
+                coinAdapter.submitList(state.coinList)
 
-                coinAdapter.submitList(btcturkCoins)
-                binding.updateEmptyState(btcturkCoins, state.isLoading)
+                binding.updateEmptyState(state.coinList, state.isLoading)
+                binding.tvActiveAlerts.text = btcturkViewModel.getActiveAlertText()
 
-                val alertCount = state.arbitrageOpportunities.count {
-                    it.exchange == Exchange.BTCTURK
+                state.selectedCoin?.let { coin ->
+                    if (state.showOptionsMenu) {
+                        showCoinOptionsMenu(coin)
+                    } else {
+                        showCoinDetailDialog(coin)
+                    }
                 }
-                binding.tvActiveAlerts.text = "$alertCount aktif alarm"
             }
         }
+    }
+
+    private fun showCoinDetailDialog(coin: CoinData) {
+    }
+
+    private fun showCoinOptionsMenu(coin: CoinData) {
     }
 
     override fun onDestroyView() {

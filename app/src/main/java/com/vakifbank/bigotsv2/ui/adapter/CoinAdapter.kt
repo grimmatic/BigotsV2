@@ -13,12 +13,17 @@ import kotlin.math.abs
 
 class CoinAdapter(
     private val onCoinClick: (CoinData) -> Unit,
-    private val onMoreClick: (CoinData) -> Unit
+    private val onMoreClick: (CoinData) -> Unit,
+    private val exchangeType: ExchangeType = ExchangeType.PARIBU
 ) : ListAdapter<CoinData, CoinAdapter.CoinViewHolder>(CoinDiffCallback()) {
+
+    enum class ExchangeType {
+        PARIBU, BTCTURK, BINANCE
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CoinViewHolder {
         val binding = ItemCoinBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-        return CoinViewHolder(binding, onCoinClick, onMoreClick)
+        return CoinViewHolder(binding, onCoinClick, onMoreClick, exchangeType)
     }
 
     override fun onBindViewHolder(holder: CoinViewHolder, position: Int) {
@@ -28,42 +33,60 @@ class CoinAdapter(
     class CoinViewHolder(
         private val binding: ItemCoinBinding,
         private val onCoinClick: (CoinData) -> Unit,
-        private val onMoreClick: (CoinData) -> Unit
+        private val onMoreClick: (CoinData) -> Unit,
+        private val exchangeType: ExchangeType
     ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(coin: CoinData) {
             binding.apply {
                 tvCoinSymbol.text = coin.symbol
                 tvCoinName.text = coin.name
-                tvParibuPrice.text = "₺${String.format("%.2f", coin.paribuPrice)}"
+
+                when (exchangeType) {
+                    ExchangeType.PARIBU -> {
+                        tvParibuPrice.text = "₺${String.format("%.2f", coin.paribuPrice)}"
+                        setupDifferenceDisplay(coin.paribuDifference, coin.alertThreshold)
+                    }
+                    ExchangeType.BTCTURK -> {
+                        tvParibuPrice.text = "₺${String.format("%.2f", coin.btcturkPrice)}"
+                        setupDifferenceDisplay(coin.btcturkDifference, coin.alertThreshold)
+                    }
+                    ExchangeType.BINANCE -> {
+                        tvParibuPrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
+                        setupDifferenceDisplay(0.0, coin.alertThreshold)
+                    }
+                }
+
                 tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
                 tvBinancePriceUsd.text = "$${String.format("%.2f", coin.binancePrice?.div(34.0))}"
 
-                // En yüksek arbitraj farkını göster
-                val maxDifference =
-                    maxOf(abs(coin.paribuDifference!!), abs(coin.btcturkDifference!!))
-                val isPositive = coin.paribuDifference!! > 0 || coin.btcturkDifference!! > 0
+                root.setOnClickListener { onCoinClick(coin) }
+                ivMoreActions.setOnClickListener { onMoreClick(coin) }
+            }
+        }
 
-                tvPriceDifference.text =
-                    "${if (isPositive) "+" else ""}${String.format("%.2f", maxDifference)}%"
+        private fun setupDifferenceDisplay(difference: Double?, alertThreshold: Double?) {
+            val diff = difference ?: 0.0
+            val threshold = alertThreshold ?: 2.5
+            val absDiff = abs(diff)
+            val isPositive = diff > 0
+
+            binding.apply {
+                tvPriceDifference.text = "${if (isPositive) "+" else ""}${String.format("%.2f", diff)}%"
 
                 val colorRes = when {
-                    maxDifference > coin.alertThreshold!! -> {
+                    absDiff > threshold -> {
                         if (isPositive) R.color.success_color else R.color.error_color
                     }
-
                     else -> R.color.text_secondary
                 }
                 tvPriceDifference.setTextColor(ContextCompat.getColor(itemView.context, colorRes))
 
-                alertIndicator.visibility = if (maxDifference > coin.alertThreshold) {
+                alertIndicator.visibility = if (absDiff > threshold) {
                     android.view.View.VISIBLE
                 } else {
                     android.view.View.GONE
                 }
-
-                root.setOnClickListener { onCoinClick(coin) }
-                ivMoreActions.setOnClickListener { onMoreClick(coin) }
             }
         }
     }

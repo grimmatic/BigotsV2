@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayoutMediator
@@ -23,7 +24,7 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private lateinit var adapter: HomeFragmentStateAdapter
 
-    private val viewModel: MainViewModel by viewModels {
+    private val viewModel: MainViewModel by activityViewModels {
         MainViewModelFactory()
     }
 
@@ -46,7 +47,6 @@ class HomeFragment : Fragment() {
         val currentBinding = _binding ?: return
 
         val viewPager = currentBinding.vpHome
-
         val fragmentList = HomeTabConfig.getFragments()
 
         adapter = HomeFragmentStateAdapter(
@@ -75,8 +75,8 @@ class HomeFragment : Fragment() {
 
         currentBinding.btnSetAllThresholds.setOnClickListener {
             val thresholdText = currentBinding.etThreshold.text.toString()
-            val threshold =
-                thresholdText.toDoubleOrNull() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
+            val threshold = thresholdText.toDoubleOrNull() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
+            viewModel.setAllThresholds(threshold)
         }
     }
 
@@ -94,28 +94,16 @@ class HomeFragment : Fragment() {
         val currentBinding = _binding ?: return
 
 
-        val btcCoin = state.coinList.find { it.symbol == "BTC" }
-        currentBinding.tvBtcPrice.text = btcCoin?.let {
-            if (state.usdTryRate > 0) {
-                "$${String.format("%.2f", it.binancePrice?.div(state.usdTryRate))}"
-            } else "$0.00"
-        } ?: "$0.00"
-
-        currentBinding.tvUsdTryRate.text = "₺${String.format("%.2f", state.usdTryRate)}"
-
-        if (state.isServiceRunning)
-            currentBinding.run {
-                fabStartStop.setImageResource(R.drawable.ic_stop)
-                tvServiceStatus.text = "Çalışıyor"
-                statusIndicator.setBackgroundResource(R.drawable.circle_green)
-            }
-        else {
-            currentBinding.run {
-                fabStartStop.setImageResource(R.drawable.ic_play_arrow)
-                tvServiceStatus.text = "Durduruldu"
-                statusIndicator.setBackgroundResource(R.drawable.circle_red)
-            }
+        currentBinding.run {
+            tvBtcPrice.text=state.btcPrice
+            tvUsdTryRate.text= viewModel.getFormattedUsdTryRate()
+            fabStartStop.setImageResource(viewModel.getServiceStatusIcon())
+            tvServiceStatus.text= viewModel.getServiceStatusText()
+            statusIndicator.setBackgroundResource(viewModel.getStatusIndicatorBackground())
         }
+
+        /*if (state.isRefreshing) {
+        }*/
     }
 
     override fun onDestroyView() {
