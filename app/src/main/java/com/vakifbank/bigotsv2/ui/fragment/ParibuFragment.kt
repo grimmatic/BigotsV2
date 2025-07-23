@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.ui.unit.Constraints
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -14,6 +15,7 @@ import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
+import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.launch
 
 class ParibuFragment : Fragment() {
@@ -40,8 +42,8 @@ class ParibuFragment : Fragment() {
         observeViewModel()
 
         binding.ivExchangeLogo.setImageResource(com.vakifbank.bigotsv2.R.drawable.paribu)
-        binding.tvExchangeName.text = "Paribu"
-        binding.tvHeaderExchange.text = "Paribu"
+        binding.tvExchangeName.text = Constants.ExchangeNames.PARIBU
+        binding.tvHeaderExchange.text = Constants.ExchangeNames.PARIBU
     }
 
     private fun setupRecyclerView() {

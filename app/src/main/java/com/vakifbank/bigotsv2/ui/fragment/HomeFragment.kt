@@ -15,6 +15,7 @@ import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
+import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -48,8 +49,8 @@ class HomeFragment : Fragment() {
     )
 
     private val tabTitles = arrayListOf(
-        "Paribu",
-        "BTCTürk",
+        Constants.ExchangeNames.PARIBU,
+        Constants.ExchangeNames.BTCTURK,
         "Ayarlar"
     )
 

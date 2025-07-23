@@ -17,6 +17,7 @@ import com.vakifbank.bigotsv2.data.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.data.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.ui.activity.MainActivity
+import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -158,8 +159,8 @@ class ArbitrageService : Service() {
             buildString {
                 top3.forEachIndexed { index, opportunity ->
                     val exchangeName = when (opportunity.exchange) {
-                        Exchange.PARIBU -> "Paribu"
-                        Exchange.BTCTURK -> "BTCTurk"
+                        Exchange.PARIBU -> Constants.ExchangeNames.PARIBU
+                        Exchange.BTCTURK -> Constants.ExchangeNames.BTCTURK
                         else -> "Unknown"
                     }
 

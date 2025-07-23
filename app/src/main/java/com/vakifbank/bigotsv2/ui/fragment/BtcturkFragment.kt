@@ -13,6 +13,7 @@ import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
+import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.launch
 
 class BtcturkFragment : Fragment() {
@@ -39,8 +40,8 @@ class BtcturkFragment : Fragment() {
         observeViewModel()
 
         binding.ivExchangeLogo.setImageResource(com.vakifbank.bigotsv2.R.drawable.btcturk)
-        binding.tvExchangeName.text = "BTCTurk"
-        binding.tvHeaderExchange.text = "BTCTurk"
+        binding.tvExchangeName.text = Constants.ExchangeNames.BTCTURK
+        binding.tvHeaderExchange.text = Constants.ExchangeNames.BTCTURK
 
     }
 
