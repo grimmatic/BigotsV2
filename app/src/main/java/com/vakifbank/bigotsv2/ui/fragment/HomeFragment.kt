@@ -13,18 +13,17 @@ import com.vakifbank.bigotsv2.domain.model.HomeTabConfig
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
-import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
 import com.vakifbank.bigotsv2.utils.Constants
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: HomeFragmentStateAdapter
 
-    private val viewModel: MainViewModel by activityViewModels {
-        MainViewModelFactory()
-    }
+    private val viewModel: MainViewModel by activityViewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,

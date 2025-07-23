@@ -8,13 +8,16 @@ import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.utils.Constants
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-class ParibuViewModel(
+@HiltViewModel
+class ParibuViewModel @Inject constructor(
     private val repository: CryptoRepository
 ) : ViewModel() {
 
@@ -152,13 +155,3 @@ data class ParibuUiState(
     val isLoading: Boolean = true,
     val isRefreshing: Boolean = false
 )
-
-class ParibuViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(ParibuViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return ParibuViewModel(CryptoRepository.getInstance()) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}

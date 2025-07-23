@@ -13,23 +13,19 @@ import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
-import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
 import com.vakifbank.bigotsv2.ui.viewmodel.ParibuViewModel
-import com.vakifbank.bigotsv2.ui.viewmodel.ParibuViewModelFactory
 import com.vakifbank.bigotsv2.utils.updateEmptyState
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class ParibuFragment : Fragment() {
     private var _binding: FragmentCryptoListBinding? = null
     private val binding get() = _binding!!
 
-    private val mainViewModel: MainViewModel by activityViewModels {
-        MainViewModelFactory()
-    }
+    private val mainViewModel: MainViewModel by activityViewModels()
 
-    private val paribuViewModel: ParibuViewModel by viewModels {
-        ParibuViewModelFactory()
-    }
+    private val paribuViewModel: ParibuViewModel by viewModels ()
 
     private lateinit var coinAdapter: CoinAdapter
 

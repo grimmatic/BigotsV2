@@ -9,13 +9,16 @@ import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.service.ServiceManager
 import com.vakifbank.bigotsv2.utils.Constants
+import dagger.hilt.android.lifecycle.HiltViewModel
+import jakarta.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-class MainViewModel(
+@HiltViewModel
+class MainViewModel @Inject constructor(
     private val repository: CryptoRepository
 ) : ViewModel() {
 
@@ -164,12 +167,3 @@ enum class FilterType {
     ALL, ALERTS_ONLY, POSITIVE_ONLY, NEGATIVE_ONLY
 }
 
-class MainViewModelFactory : ViewModelProvider.Factory {
-    override fun <T : ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MainViewModel(CryptoRepository.getInstance()) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
-    }
-}

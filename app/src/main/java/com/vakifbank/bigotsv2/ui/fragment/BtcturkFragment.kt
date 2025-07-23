@@ -12,17 +12,16 @@ import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.BtcturkViewModel
-import com.vakifbank.bigotsv2.ui.viewmodel.BtcturkViewModelFactory
 import com.vakifbank.bigotsv2.utils.updateEmptyState
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
+@AndroidEntryPoint
 class BtcturkFragment : Fragment() {
     private var _binding: FragmentCryptoListBinding? = null
     private val binding get() = _binding!!
 
-    private val btcturkViewModel: BtcturkViewModel by viewModels {
-        BtcturkViewModelFactory()
-    }
+    private val btcturkViewModel: BtcturkViewModel by viewModels()
 
     private lateinit var coinAdapter: CoinAdapter
 

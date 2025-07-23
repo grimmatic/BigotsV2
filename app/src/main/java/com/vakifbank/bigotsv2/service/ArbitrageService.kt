@@ -18,6 +18,7 @@ import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.ui.activity.MainActivity
 import com.vakifbank.bigotsv2.utils.Constants
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -26,7 +27,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
+@AndroidEntryPoint
 class ArbitrageService : Service() {
 
     companion object {
@@ -49,7 +52,8 @@ class ArbitrageService : Service() {
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
-    private val repository = CryptoRepository.getInstance()
+    @Inject
+    lateinit var repository : CryptoRepository
     private var updateJob: Job? = null
     private var notificationJob: Job? = null
 

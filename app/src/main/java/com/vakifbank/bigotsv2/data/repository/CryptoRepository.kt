@@ -9,22 +9,38 @@ import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
 import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
 import com.vakifbank.bigotsv2.data.service.ApiClient
+import com.vakifbank.bigotsv2.data.service.BinanceApiService
+import com.vakifbank.bigotsv2.data.service.BtcTurkApiService
+import com.vakifbank.bigotsv2.data.service.ParibuApiService
 import com.vakifbank.bigotsv2.utils.Constants
+import jakarta.inject.Inject
+import jakarta.inject.Singleton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-class CryptoRepository private constructor() {
+@Singleton
+class CryptoRepository @Inject constructor(
+    private val paribuApi: ParibuApiService,
+    private val binanceApi: BinanceApiService,
+    private val btcturkApi: BtcTurkApiService
+) {
 
     companion object {
         @Volatile
         private var INSTANCE: CryptoRepository? = null
 
-        fun getInstance(): CryptoRepository {
+        fun getInstance(
+            paribuApi: ParibuApiService,
+            binanceApi: BinanceApiService,
+            btcturkApi: BtcTurkApiService
+        ): CryptoRepository {
             return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: CryptoRepository().also { INSTANCE = it }
+                INSTANCE ?: CryptoRepository(paribuApi, binanceApi, btcturkApi).also {
+                    INSTANCE = it
+                }
             }
         }
     }
