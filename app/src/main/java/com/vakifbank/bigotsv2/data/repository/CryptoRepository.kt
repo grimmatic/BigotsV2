@@ -1,13 +1,13 @@
 package com.vakifbank.bigotsv2.data.repository
 
 import android.util.Log
-import com.vakifbank.bigotsv2.data.model.ArbitrageOpportunity
-import com.vakifbank.bigotsv2.data.model.CoinData
-import com.vakifbank.bigotsv2.data.model.Exchange
-import com.vakifbank.bigotsv2.data.model.SupportedCoins
-import com.vakifbank.bigotsv2.data.model.binance.BinanceTickerResponse
-import com.vakifbank.bigotsv2.data.model.btcturk.BtcTurkTicker
-import com.vakifbank.bigotsv2.data.model.paribu.ParibuTicker
+import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
+import com.vakifbank.bigotsv2.domain.model.CoinData
+import com.vakifbank.bigotsv2.domain.model.Exchange
+import com.vakifbank.bigotsv2.domain.model.SupportedCoins
+import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
+import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
+import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
 import com.vakifbank.bigotsv2.data.service.ApiClient
 import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.async

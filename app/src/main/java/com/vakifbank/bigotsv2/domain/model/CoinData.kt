@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2.data.model
+package com.vakifbank.bigotsv2.domain.model
 
 data class CoinData(
     val symbol: String?,

@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2.data.model
+package com.vakifbank.bigotsv2.domain.model
 
 enum class SupportedCoins(
     val symbol: String,

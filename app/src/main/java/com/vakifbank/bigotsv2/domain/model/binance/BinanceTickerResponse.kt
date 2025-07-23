@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2.data.model.binance
+package com.vakifbank.bigotsv2.domain.model.binance
 
 data class BinanceTickerResponse(
     val symbol: String?,

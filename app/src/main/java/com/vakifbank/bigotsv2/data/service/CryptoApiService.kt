@@ -1,8 +1,8 @@
 package com.vakifbank.bigotsv2.data.service
 
-import com.vakifbank.bigotsv2.data.model.binance.BinanceTickerResponse
-import com.vakifbank.bigotsv2.data.model.btcturk.BtcTurkResponse
-import com.vakifbank.bigotsv2.data.model.paribu.ParibuTicker
+import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
+import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkResponse
+import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
 import retrofit2.Response
 import retrofit2.http.GET
 

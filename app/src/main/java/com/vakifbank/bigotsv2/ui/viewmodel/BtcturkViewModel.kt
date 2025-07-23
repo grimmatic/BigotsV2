@@ -3,9 +3,9 @@ package com.vakifbank.bigotsv2.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.vakifbank.bigotsv2.data.model.ArbitrageOpportunity
-import com.vakifbank.bigotsv2.data.model.CoinData
-import com.vakifbank.bigotsv2.data.model.Exchange
+import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
+import com.vakifbank.bigotsv2.domain.model.CoinData
+import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.flow.MutableStateFlow

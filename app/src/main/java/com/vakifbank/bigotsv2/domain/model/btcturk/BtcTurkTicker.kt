@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2.data.model.btcturk
+package com.vakifbank.bigotsv2.domain.model.btcturk
 
 data class BtcTurkTicker(
     val pair: String?,

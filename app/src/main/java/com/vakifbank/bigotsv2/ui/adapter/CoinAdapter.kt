@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.vakifbank.bigotsv2.R
-import com.vakifbank.bigotsv2.data.model.CoinData
+import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.databinding.ItemCoinBinding
 import kotlin.math.abs
 

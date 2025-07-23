@@ -13,8 +13,8 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import com.vakifbank.bigotsv2.CryptoArbitrageApplication
 import com.vakifbank.bigotsv2.R
-import com.vakifbank.bigotsv2.data.model.ArbitrageOpportunity
-import com.vakifbank.bigotsv2.data.model.Exchange
+import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
+import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.ui.activity.MainActivity
 import com.vakifbank.bigotsv2.utils.Constants

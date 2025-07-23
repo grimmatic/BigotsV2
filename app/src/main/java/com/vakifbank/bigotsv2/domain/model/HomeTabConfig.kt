@@ -1,4 +1,4 @@
-package com.vakifbank.bigotsv2.data.model
+package com.vakifbank.bigotsv2.domain.model
 
 import androidx.fragment.app.Fragment
 import com.vakifbank.bigotsv2.R
