@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.compose.ui.unit.Constraints
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
@@ -16,6 +15,7 @@ import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
 import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.utils.updateEmptyState
 import kotlinx.coroutines.launch
 
 class ParibuFragment : Fragment() {
@@ -71,13 +71,7 @@ class ParibuFragment : Fragment() {
 
                 coinAdapter.submitList(paribuCoins)
 
-                if (paribuCoins.isEmpty() && !state.isLoading) {
-                    binding.layoutEmptyState.visibility = View.VISIBLE
-                    binding.recyclerViewCoins.visibility = View.GONE
-                } else {
-                    binding.layoutEmptyState.visibility = View.GONE
-                    binding.recyclerViewCoins.visibility = View.VISIBLE
-                }
+                binding.updateEmptyState(paribuCoins, state.isLoading)
 
                 val alertCount = state.arbitrageOpportunities.count {
                     it.exchange == Exchange.PARIBU

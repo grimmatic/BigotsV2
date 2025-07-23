@@ -1,6 +1,5 @@
 package com.vakifbank.bigotsv2.ui.fragment
 
-import android.graphics.drawable.Drawable
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -11,11 +10,11 @@ import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.tabs.TabLayoutMediator
 import com.vakifbank.bigotsv2.R
+import com.vakifbank.bigotsv2.data.model.HomeTabConfig
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
-import com.vakifbank.bigotsv2.utils.Constants
 import kotlinx.coroutines.launch
 
 class HomeFragment : Fragment() {
@@ -42,41 +41,27 @@ class HomeFragment : Fragment() {
         observeViewModel()
     }
 
-    private val fragmentList = arrayListOf(
-        ParibuFragment(),
-        BtcturkFragment(),
-        SettingsFragment()
-    )
-
-    private val tabTitles = arrayListOf(
-        Constants.ExchangeNames.PARIBU,
-        Constants.ExchangeNames.BTCTURK,
-        "Ayarlar"
-    )
-
-    private lateinit var tabIcons: ArrayList<Drawable>
-
     private fun initViewPagerAdapter() {
         val currentBinding = _binding ?: return
 
-        tabIcons = arrayListOf(
-            ContextCompat.getDrawable(requireContext(), R.drawable.paribu)!!,
-            ContextCompat.getDrawable(requireContext(), R.drawable.btcturk)!!,
-            ContextCompat.getDrawable(requireContext(), R.drawable.ic_settings)!!
-        )
-
         val viewPager = currentBinding.vpHome
+
+        val fragmentList = HomeTabConfig.getFragments()
+
         adapter = HomeFragmentStateAdapter(
             childFragmentManager,
             viewLifecycleOwner.lifecycle,
             fragmentList
         )
+
         viewPager.adapter = adapter
 
         TabLayoutMediator(currentBinding.tabLayoutHomeFragment, viewPager) { tab, position ->
-            tab.text = tabTitles[position]
-            tab.icon = tabIcons[position]
+            val tabConfig = HomeTabConfig.values()[position]
+            tab.text = tabConfig.title
+            tab.icon = ContextCompat.getDrawable(requireContext(), tabConfig.iconRes)
         }.attach()
+
         currentBinding.tabLayoutHomeFragment.setTabIconTint(null)
     }
 

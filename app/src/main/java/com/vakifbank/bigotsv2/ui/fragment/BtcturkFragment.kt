@@ -14,6 +14,7 @@ import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModelFactory
 import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.utils.updateEmptyState
 import kotlinx.coroutines.launch
 
 class BtcturkFragment : Fragment() {
@@ -67,14 +68,7 @@ class BtcturkFragment : Fragment() {
                 }.sortedByDescending { it.btcturkDifference?.let { x -> kotlin.math.abs(x) } }
 
                 coinAdapter.submitList(btcturkCoins)
-
-                if (btcturkCoins.isEmpty() && !state.isLoading) {
-                    binding.layoutEmptyState.visibility = View.VISIBLE
-                    binding.recyclerViewCoins.visibility = View.GONE
-                } else {
-                    binding.layoutEmptyState.visibility = View.GONE
-                    binding.recyclerViewCoins.visibility = View.VISIBLE
-                }
+                binding.updateEmptyState(btcturkCoins, state.isLoading)
 
                 val alertCount = state.arbitrageOpportunities.count {
                     it.exchange == Exchange.BTCTURK
