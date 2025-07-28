@@ -2,7 +2,6 @@ package com.vakifbank.bigotsv2.ui.viewmodel
 
 import android.content.Context
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.domain.model.CoinData
@@ -36,12 +35,14 @@ class MainViewModel @Inject constructor(
                 repository.coinDataList,
                 repository.arbitrageOpportunities,
                 repository.usdTryRate,
+                repository.usdTryRateBtcTurk,
                 ServiceManager.isServiceRunning
-            ) { coins, opportunities, usdTryRate, isServiceRunning ->
+            ) { coins, opportunities, usdTryRate,usdTryRateBtcTurk,isServiceRunning ->
                 MainUiState(
                     coinList = coins,
                     arbitrageOpportunities = opportunities,
                     usdTryRate = usdTryRate,
+                    usdTryRateBtcTurk = usdTryRateBtcTurk,
                     isServiceRunning = isServiceRunning,
                     btcPrice = getBtcPrice(coins, usdTryRate),
                     btcPriceUsd = getBtcPriceUsd(coins, usdTryRate),
@@ -142,12 +143,16 @@ class MainViewModel @Inject constructor(
     fun sortCoins(sortType: SortType) {
         _uiState.value = _uiState.value.copy(sortType = sortType)
     }
+    fun getFormattedUsdTryRateBtcTurk(): String {
+        return "₺${String.format("%.3f", _uiState.value.usdTryRateBtcTurk)}"
+    }
 }
 
 data class MainUiState(
     val coinList: List<CoinData> = emptyList(),
     val arbitrageOpportunities: List<ArbitrageOpportunity> = emptyList(),
     val usdTryRate: Double = 0.0,
+    val usdTryRateBtcTurk: Double = 0.0,
     val isServiceRunning: Boolean = false,
     val btcPrice: String = "$0.00",
     val btcPriceUsd: Double = 0.0,

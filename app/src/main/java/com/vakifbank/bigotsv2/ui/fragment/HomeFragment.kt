@@ -8,6 +8,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
 import com.vakifbank.bigotsv2.domain.model.HomeTabConfig
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
@@ -22,6 +23,7 @@ class HomeFragment : Fragment() {
     private var _binding: FragmentHomeBinding? = null
     private val binding get() = _binding!!
     private lateinit var adapter: HomeFragmentStateAdapter
+    private var currentTabPosition = 0
 
     private val viewModel: MainViewModel by activityViewModels()
 
@@ -59,10 +61,27 @@ class HomeFragment : Fragment() {
             tab.text = tabConfig.title
             tab.icon = ContextCompat.getDrawable(requireContext(), tabConfig.iconRes)
         }.attach()
-
+        viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                currentTabPosition = position
+                updateUsdTryRateForCurrentTab(position)
+            }
+        })
         currentBinding.tabLayoutHomeFragment.setTabIconTint(null)
-    }
+        currentTabPosition = 0
+        updateUsdTryRateForCurrentTab(0)
 
+    }
+    private fun updateUsdTryRateForCurrentTab(position: Int) {
+        val currentBinding = _binding ?: return
+
+        currentBinding.tvUsdTryRate.text = when (position) {
+            0 -> viewModel.getFormattedUsdTryRate()
+            1 -> viewModel.getFormattedUsdTryRateBtcTurk()
+            else -> viewModel.getFormattedUsdTryRate()
+        }
+    }
     private fun setupFabActions() {
         val currentBinding = _binding ?: return
 
@@ -92,7 +111,7 @@ class HomeFragment : Fragment() {
 
         currentBinding.run {
             tvBtcPrice.text=state.btcPrice
-            tvUsdTryRate.text= viewModel.getFormattedUsdTryRate()
+            updateUsdTryRateForCurrentTab(currentTabPosition)
             fabStartStop.setImageResource(viewModel.getServiceStatusIcon())
             tvServiceStatus.text= viewModel.getServiceStatusText()
             statusIndicator.setBackgroundResource(viewModel.getStatusIndicatorBackground())
