@@ -46,19 +46,23 @@ class CoinAdapter(
                     ExchangeType.PARIBU -> {
                         tvParibuPrice.text = "₺${String.format("%.2f", coin.paribuPrice)}"
                         setupDifferenceDisplay(coin.paribuDifference, coin.alertThreshold)
+                        tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
+
                     }
                     ExchangeType.BTCTURK -> {
                         tvParibuPrice.text = "₺${String.format("%.2f", coin.btcturkPrice)}"
                         setupDifferenceDisplay(coin.btcturkDifference, coin.alertThreshold)
+                        tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePriceBtcTurk)}"
+
                     }
                     ExchangeType.BINANCE -> {
                         tvParibuPrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
                         setupDifferenceDisplay(0.0, coin.alertThreshold)
+                        tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
                     }
                 }
 
-                tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
-                tvBinancePriceUsd.text = "$${String.format("%.2f", coin.binancePrice?.div(34.0))}"
+                tvBinancePriceUsd.text = "$${String.format("%.2f", coin.binancePriceUsd)}"
 
                 root.setOnClickListener { onCoinClick(coin) }
                 ivMoreActions.setOnClickListener { onMoreClick(coin) }

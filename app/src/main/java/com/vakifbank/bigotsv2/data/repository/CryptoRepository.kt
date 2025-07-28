@@ -55,6 +55,10 @@ class CryptoRepository @Inject constructor(
     private val _usdTryRate = MutableStateFlow(Constants.Numeric.DEFAULT_PRICE)
     val usdTryRate: Flow<Double> = _usdTryRate.asStateFlow()
 
+    private val _usdTryRateBtcTurk = MutableStateFlow(Constants.Numeric.DEFAULT_PRICE)
+    val usdTryRateBtcTurk: Flow<Double> = _usdTryRateBtcTurk.asStateFlow()
+
+
     suspend fun fetchAllData() {
         try {
             coroutineScope {
@@ -67,7 +71,13 @@ class CryptoRepository @Inject constructor(
                 val btcturkData = btcturkDeferred.await()
 
                 paribuData[Constants.ApiSymbols.USDT_TL]?.let { usdtTicker ->
-                    _usdTryRate.value = usdtTicker.lowestAsk ?: Constants.Numeric.DEFAULT_PRICE
+                    val usdtRate = usdtTicker.lowestAsk ?: Constants.Numeric.DEFAULT_PRICE
+                    _usdTryRate.value = usdtRate
+                }
+
+                btcturkData["USDTTRY"]?.let { usdtTicker ->
+                    val usdtRate = usdtTicker.ask ?: Constants.Numeric.DEFAULT_PRICE
+                    _usdTryRateBtcTurk.value = usdtRate
                 }
 
                 val updatedCoins = calculateArbitrage(paribuData, binanceData, btcturkData)
@@ -83,9 +93,11 @@ class CryptoRepository @Inject constructor(
 
     private suspend fun fetchParibuData(): Map<String, ParibuTicker> {
         return try {
-            val response = ApiClient.paribuApi.getTickers()
+            val response = paribuApi.getTickers()
             if (response.isSuccessful) {
-                response.body() ?: emptyMap()
+                val data = response.body() ?: emptyMap()
+                data[Constants.ApiSymbols.USDT_TL]?.let { usdtTicker -> }
+                data
             } else {
                 emptyMap()
             }
@@ -96,9 +108,10 @@ class CryptoRepository @Inject constructor(
 
     private suspend fun fetchBinanceData(): Map<String?, BinanceTickerResponse> {
         return try {
-            val response = ApiClient.binanceApi.getBookTickers()
+            val response =binanceApi.getBookTickers()
             if (response.isSuccessful) {
-                response.body()?.associateBy { it.symbol } ?: emptyMap()
+                val data = response.body()?.associateBy { it.symbol } ?: emptyMap()
+                data
             } else {
                 emptyMap()
             }
@@ -109,9 +122,13 @@ class CryptoRepository @Inject constructor(
 
     private suspend fun fetchBtcTurkData(): Map<String?, BtcTurkTicker> {
         return try {
-            val response = ApiClient.btcturkApi.getTickers()
+            val response = btcturkApi.getTickers()
             if (response.isSuccessful) {
-                response.body()?.data?.associateBy { it.pair } ?: emptyMap()
+                val btcturkResponse = response.body()
+                val data = btcturkResponse?.data?.associateBy {
+                    it.pair?.replace("_", "")
+                } ?: emptyMap()
+                data
             } else {
                 emptyMap()
             }
@@ -125,7 +142,9 @@ class CryptoRepository @Inject constructor(
         binanceData: Map<String?, BinanceTickerResponse>,
         btcturkData: Map<String?, BtcTurkTicker>
     ): List<CoinData> {
-        val usdTryRate = _usdTryRate.value
+        val paribuUsdtRate = _usdTryRate.value
+
+        val btcturkUsdtRate = _usdTryRateBtcTurk.value
 
         return SupportedCoins.values().mapNotNull { coin ->
             try {
@@ -134,24 +153,42 @@ class CryptoRepository @Inject constructor(
 
                 val binanceUsdPrice = binanceData[coin.binanceSymbol]?.askPrice?.toDoubleOrNull()
                     ?: Constants.Numeric.DEFAULT_PRICE
-                val binanceTlPrice = if (usdTryRate > Constants.Numeric.DEFAULT_PRICE) {
-                    binanceUsdPrice * usdTryRate
+
+                val binanceTlPriceParibu = if (paribuUsdtRate > Constants.Numeric.DEFAULT_PRICE) {
+                    binanceUsdPrice * paribuUsdtRate
                 } else {
                     Constants.Numeric.DEFAULT_PRICE
                 }
 
-                val btcturkPrice = btcturkData[coin.btcturkSymbol]?.bid
+                val btcturkPrice = btcturkData[coin.btcturkSymbol.replace("_", "")]?.bid
                     ?: Constants.Numeric.DEFAULT_PRICE
 
-                val paribuDifference = calculateDifferencePercentage(paribuPrice, binanceTlPrice)
-                val btcturkDifference = calculateDifferencePercentage(btcturkPrice, binanceTlPrice)
+                val binanceTlPriceBtcTurk = if (btcturkUsdtRate > Constants.Numeric.DEFAULT_PRICE) {
+                    binanceUsdPrice * btcturkUsdtRate
+                } else {
+                    Constants.Numeric.DEFAULT_PRICE
+                }
+
+                val paribuDifference = if (paribuPrice > Constants.Numeric.DEFAULT_PRICE) {
+                    ((paribuPrice - binanceTlPriceParibu) * Constants.Numeric.PERCENTAGE_MULTIPLIER) / paribuPrice
+                } else {
+                    Constants.Numeric.DEFAULT_DIFFERENCE
+                }
+
+                val btcturkDifference = if (btcturkPrice > Constants.Numeric.DEFAULT_PRICE) {
+                    ((btcturkPrice - binanceTlPriceBtcTurk) * Constants.Numeric.PERCENTAGE_MULTIPLIER) / btcturkPrice
+                } else {
+                    Constants.Numeric.DEFAULT_DIFFERENCE
+                }
 
                 CoinData(
                     symbol = coin.symbol,
                     name = coin.displayName,
                     paribuPrice = paribuPrice,
                     btcturkPrice = btcturkPrice,
-                    binancePrice = binanceTlPrice,
+                    binancePrice = binanceTlPriceParibu,
+                    binancePriceBtcTurk = binanceTlPriceBtcTurk,
+                    binancePriceUsd = binanceUsdPrice,
                     paribuDifference = paribuDifference,
                     btcturkDifference = btcturkDifference,
                     alertThreshold = Constants.Numeric.DEFAULT_ALERT_THRESHOLD,
@@ -163,6 +200,7 @@ class CryptoRepository @Inject constructor(
             }
         }
     }
+
 
     private fun calculateDifferencePercentage(localPrice: Double, binancePrice: Double): Double {
         return if (localPrice > Constants.Numeric.DEFAULT_PRICE && binancePrice > Constants.Numeric.DEFAULT_PRICE) {

@@ -90,7 +90,6 @@ class HomeFragment : Fragment() {
     private fun updateUI(state: com.vakifbank.bigotsv2.ui.viewmodel.MainUiState) {
         val currentBinding = _binding ?: return
 
-
         currentBinding.run {
             tvBtcPrice.text=state.btcPrice
             tvUsdTryRate.text= viewModel.getFormattedUsdTryRate()

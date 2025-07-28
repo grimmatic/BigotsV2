@@ -51,7 +51,7 @@ class BtcturkViewModel @Inject constructor(
 
     private fun filterBtcturkCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.btcturkPrice!! > 0 && kotlin.math.abs(coin.btcturkDifference!!) >= 0.1
+            coin.btcturkPrice!! > 0 && kotlin.math.abs(coin.btcturkDifference?:0.0) >= 0.01
         }.sortedByDescending {
             it.btcturkDifference?.let { x -> kotlin.math.abs(x) }
         }

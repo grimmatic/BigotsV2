@@ -18,6 +18,7 @@ object Constants {
 
     object ApiSymbols {
         const val USDT_TL = "USDT_TL"
+        const val USDT_TRY = "USDTTRY"
     }
 
     object Defaults {

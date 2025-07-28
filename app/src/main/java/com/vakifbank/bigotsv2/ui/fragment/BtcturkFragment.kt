@@ -53,7 +53,8 @@ class BtcturkFragment : Fragment() {
             },
             onMoreClick = { coin ->
                 btcturkViewModel.showCoinOptionsMenu(coin)
-            }
+            },
+            exchangeType=CoinAdapter.ExchangeType.BTCTURK
         )
 
         binding.recyclerViewCoins.apply {

@@ -99,7 +99,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun getFormattedUsdTryRate(): String {
-        return "₺${String.format("%.2f", _uiState.value.usdTryRate)}"
+        return "₺${String.format("%.3f", _uiState.value.usdTryRate)}"
     }
 
     fun getServiceStatusText(): String {

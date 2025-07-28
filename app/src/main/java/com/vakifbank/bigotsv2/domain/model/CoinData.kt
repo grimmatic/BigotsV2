@@ -6,6 +6,8 @@ data class CoinData(
     val paribuPrice: Double? = 0.0,
     val btcturkPrice: Double? = 0.0,
     val binancePrice: Double? = 0.0,
+    val binancePriceUsd:Double? = 0.0,
+    val binancePriceBtcTurk: Double? = 0.0,
     val paribuDifference: Double? = 0.0,
     val btcturkDifference: Double? = 0.0,
     val alertThreshold: Double? = 2.5,
