@@ -82,10 +82,26 @@ class BtcturkFragment : Fragment() {
         }
     }
 
+    private fun showCoinDetailsDialog(coin: CoinData) {
+        val dialog = CoinDetailsDialog.newInstance(coin, isFromBtcTurk = true)
+
+        dialog.setOnThresholdChangedListener { threshold ->
+            btcturkViewModel.updateCoinThreshold(coin, threshold)
+        }
+
+        dialog.setOnSoundLevelChangedListener { soundLevel ->
+            btcturkViewModel.updateCoinSoundLevel(coin, soundLevel)
+        }
+
+        dialog.show(childFragmentManager, "CoinDetailsDialog")
+    }
+
     private fun showCoinDetailDialog(coin: CoinData) {
+        showCoinDetailsDialog(coin)
     }
 
     private fun showCoinOptionsMenu(coin: CoinData) {
+        showCoinDetailsDialog(coin)
     }
 
     override fun onDestroyView() {

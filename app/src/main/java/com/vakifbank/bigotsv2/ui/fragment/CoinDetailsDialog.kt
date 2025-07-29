@@ -1,60 +1,245 @@
 package com.vakifbank.bigotsv2.ui.fragment
 
+import android.app.Dialog
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.widget.SeekBar
+import android.widget.Toast
+import androidx.fragment.app.DialogFragment
 import com.vakifbank.bigotsv2.R
+import com.vakifbank.bigotsv2.databinding.FragmentCoinDetailsDialogBinding
+import com.vakifbank.bigotsv2.domain.model.CoinData
+import com.vakifbank.bigotsv2.utils.SoundMapping
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
+class CoinDetailsDialog : DialogFragment() {
 
-/**
- * A simple [Fragment] subclass.
- * Use the [CoinDetailsDialog.newInstance] factory method to
- * create an instance of this fragment.
- */
-class CoinDetailsDialog : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding: FragmentCoinDetailsDialogBinding? = null
+    private val binding get() = _binding!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private var coinData: CoinData? = null
+    private var isFromBtcTurk: Boolean = false
+    private var mediaPlayer: MediaPlayer? = null
+
+    private var onThresholdChanged: ((Double) -> Unit)? = null
+    private var onSoundLevelChanged: ((Int) -> Unit)? = null
+
+    companion object {
+        private const val ARG_COIN_DATA = "coin_data"
+        private const val ARG_IS_BTC_TURK = "is_btc_turk"
+
+        fun newInstance(
+            coinData: CoinData,
+            isFromBtcTurk: Boolean = false
+        ): CoinDetailsDialog {
+            return CoinDetailsDialog().apply {
+                arguments = Bundle().apply {
+                    putParcelable(ARG_COIN_DATA, coinData)
+                    putBoolean(ARG_IS_BTC_TURK, isFromBtcTurk)
+                }
+            }
         }
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_coin_details_dialog, container, false)
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        _binding = FragmentCoinDetailsDialogBinding.inflate(layoutInflater)
+
+        coinData = arguments?.getParcelable(ARG_COIN_DATA)
+        isFromBtcTurk = arguments?.getBoolean(ARG_IS_BTC_TURK, false) == true
+
+        val dialog = Dialog(requireContext())
+        dialog.setContentView(binding.root)
+        dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+
+        setupViews()
+        setupClickListeners()
+
+        return dialog
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment CoinDetailsDialog.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            CoinDetailsDialog().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
-                }
+    private fun setupViews() {
+        coinData?.let { coin ->
+            binding.tvCoinName.text = coin.name
+            binding.tvCoinSymbol.text = coin.symbol
+
+            binding.etThreshold.setText(coin.alertThreshold.toString())
+            binding.seekBarThreshold.progress = ((coin.alertThreshold ?: 2.5) * 10).toInt()
+            binding.seekBarThreshold.max = 100
+
+            binding.seekBarVolume.progress = coin.soundLevel ?: 15
+            binding.seekBarVolume.max = 15
+
+            setupExchangeButtons(coin)
+        }
+    }
+
+    private fun setupExchangeButtons(coin: CoinData) {
+        if (isFromBtcTurk) {
+            binding.btnExchange1.text = "BTCTurk Parite"
+            binding.btnExchange1.setBackgroundColor(Color.parseColor("#1e88e5"))
+            binding.btnExchange2.text = "BTCTurk Cüzdan"
+            binding.btnExchange2.setBackgroundColor(Color.parseColor("#1e88e5"))
+        } else {
+            binding.btnExchange1.text = "Paribu Parite"
+            binding.btnExchange1.setBackgroundColor(Color.parseColor("#2E7D32"))
+            binding.btnExchange2.text = "Paribu Cüzdan"
+            binding.btnExchange2.setBackgroundColor(Color.parseColor("#2E7D32"))
+        }
+
+        binding.btnBinanceTrade.text = "Binance Parite"
+        binding.btnBinanceWallet.text = "Binance Cüzdan"
+    }
+
+    private fun setupClickListeners() {
+        binding.seekBarThreshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                val threshold = progress / 10.0
+                binding.etThreshold.setText(threshold.toString())
             }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        binding.seekBarVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                playTestSound(progress)
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        binding.btnSave.setOnClickListener {
+            saveSettings()
+        }
+
+        binding.btnCancel.setOnClickListener {
+            dismissAllowingStateLoss()
+        }
+
+        binding.btnExchange1.setOnClickListener {
+            openExchangeApp(true)
+        }
+
+        binding.btnExchange2.setOnClickListener {
+            openExchangeWallet(true)
+        }
+
+        binding.btnBinanceTrade.setOnClickListener {
+            openBinanceTrade()
+        }
+
+        binding.btnBinanceWallet.setOnClickListener {
+            openBinanceWallet()
+        }
+    }
+
+    private fun playTestSound(volume: Int) {
+        coinData?.symbol?.let { symbol ->
+            val soundRes = SoundMapping.getSoundResource(symbol)
+            try {
+                mediaPlayer?.release()
+                mediaPlayer = MediaPlayer.create(requireContext(), soundRes)
+                val volumeLevel = volume / 15.0f
+                mediaPlayer?.setVolume(volumeLevel, volumeLevel)
+                mediaPlayer?.start()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    private fun saveSettings() {
+        try {
+            val threshold = binding.etThreshold.text.toString().toDouble()
+            val soundLevel = binding.seekBarVolume.progress
+
+            onThresholdChanged?.invoke(threshold)
+            onSoundLevelChanged?.invoke(soundLevel)
+
+            Toast.makeText(requireContext(), "Ayarlar kaydedildi", Toast.LENGTH_SHORT).show()
+            dismissAllowingStateLoss()
+        } catch (e: NumberFormatException) {
+            Toast.makeText(requireContext(), "Geçerli bir eşik değeri girin", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun openExchangeApp(isTrade: Boolean) {
+        coinData?.symbol?.let { symbol ->
+            try {
+                val intent = Intent(Intent.ACTION_VIEW)
+                if (isFromBtcTurk) {
+                    val btcTurkSymbol = symbol.lowercase() + "try"
+                    val url = if (isTrade) {
+                        "btcturkpro://host/trade/$btcTurkSymbol"
+                    } else {
+                        "btcturkpro://host/wallet"
+                    }
+                    intent.data = Uri.parse(url)
+                } else {
+                    val paribuSymbol = symbol.lowercase() + "_tl"
+                    val url = if (isTrade) {
+                        "paribu://markets/$paribuSymbol"
+                    } else {
+                        "paribu://wallet/${symbol.lowercase()}/deposit"
+                    }
+                    intent.data = Uri.parse(url)
+                }
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(requireContext(), "Uygulama bulunamadı", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openExchangeWallet(isExchange1: Boolean) {
+        openExchangeApp(false)
+    }
+
+    private fun openBinanceTrade() {
+        coinData?.symbol?.let { symbol ->
+            try {
+                val binanceSymbol = symbol.lowercase() + "usdt"
+                val intent = Intent(Intent.ACTION_VIEW)
+                intent.data = Uri.parse("bnc://app.binance.com/trade/trade?at=spot&symbol=$binanceSymbol")
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+            } catch (e: ActivityNotFoundException) {
+                Toast.makeText(requireContext(), "Binance uygulaması bulunamadı", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun openBinanceWallet() {
+        try {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = Uri.parse("bnc://app.binance.com/funds/withdrawChooseCoin")
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            startActivity(intent)
+        } catch (e: ActivityNotFoundException) {
+            Toast.makeText(requireContext(), "Binance uygulaması bulunamadı", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    fun setOnThresholdChangedListener(listener: (Double) -> Unit) {
+        onThresholdChanged = listener
+    }
+
+    fun setOnSoundLevelChangedListener(listener: (Int) -> Unit) {
+        onSoundLevelChanged = listener
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        mediaPlayer?.release()
+        mediaPlayer = null
+        _binding = null
     }
 }

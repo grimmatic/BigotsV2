@@ -44,7 +44,6 @@ class HomeFragment : Fragment() {
 
     private fun initViewPagerAdapter() {
         val currentBinding = _binding ?: return
-
         val viewPager = currentBinding.vpHome
         val fragmentList = HomeTabConfig.getFragments()
 

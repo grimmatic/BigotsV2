@@ -87,10 +87,26 @@ class ParibuFragment : Fragment() {
         }
     }
 
+    private fun showCoinDetailsDialog(coin: CoinData) {
+        val dialog = CoinDetailsDialog.newInstance(coin, isFromBtcTurk = false)
+
+        dialog.setOnThresholdChangedListener { threshold ->
+            paribuViewModel.updateCoinThreshold(coin, threshold)
+        }
+
+        dialog.setOnSoundLevelChangedListener { soundLevel ->
+            paribuViewModel.updateCoinSoundLevel(coin, soundLevel)
+        }
+
+        dialog.show(childFragmentManager, "CoinDetailsDialog")
+    }
+
     private fun showCoinDetailDialog(coin: CoinData) {
+        showCoinDetailsDialog(coin)
     }
 
     private fun showCoinOptionsMenu(coin: CoinData) {
+        showCoinDetailsDialog(coin)
     }
 
     override fun onDestroyView() {
