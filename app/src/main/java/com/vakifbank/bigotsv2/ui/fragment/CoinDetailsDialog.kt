@@ -9,6 +9,7 @@ import android.graphics.drawable.ColorDrawable
 import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
+import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
@@ -56,10 +57,23 @@ class CoinDetailsDialog : DialogFragment() {
         dialog.setContentView(binding.root)
         dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
 
+        dialog.window?.setLayout(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
+
         setupViews()
         setupClickListeners()
 
         return dialog
+    }
+
+    override fun onStart() {
+        super.onStart()
+        dialog?.window?.setLayout(
+            (resources.displayMetrics.widthPixels * 0.95).toInt(),
+            ViewGroup.LayoutParams.WRAP_CONTENT
+        )
     }
 
     private fun setupViews() {
@@ -178,9 +192,14 @@ class CoinDetailsDialog : DialogFragment() {
                     val btcTurkSymbol = symbol.lowercase() + "try"
                     val url = if (isTrade) {
                         "btcturkpro://host/trade/$btcTurkSymbol"
-                    } else {
+
+                        //web sayfası intenti =                         "https://kripto.btcturk.com/pro/al-sat/NEO_TRY"
+                    }
+
+                    else {
                         "btcturkpro://host/wallet"
                     }
+                    println(btcTurkSymbol)
                     intent.data = Uri.parse(url)
                 } else {
                     val paribuSymbol = symbol.lowercase() + "_tl"
