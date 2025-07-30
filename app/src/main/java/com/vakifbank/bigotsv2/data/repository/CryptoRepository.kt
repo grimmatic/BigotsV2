@@ -2,6 +2,9 @@ package com.vakifbank.bigotsv2.data.repository
 
 import android.content.Context
 import android.util.Log
+import com.vakifbank.bigotsv2.data.service.BinanceApiService
+import com.vakifbank.bigotsv2.data.service.BtcTurkApiService
+import com.vakifbank.bigotsv2.data.service.ParibuApiService
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.domain.model.Exchange
@@ -9,18 +12,15 @@ import com.vakifbank.bigotsv2.domain.model.SupportedCoins
 import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
 import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
-import com.vakifbank.bigotsv2.data.service.BinanceApiService
-import com.vakifbank.bigotsv2.data.service.BtcTurkApiService
-import com.vakifbank.bigotsv2.data.service.ParibuApiService
 import com.vakifbank.bigotsv2.utils.Constants
 import dagger.hilt.android.qualifiers.ApplicationContext
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
+import javax.inject.Singleton
 
 @Singleton
 class CryptoRepository @Inject constructor(
@@ -75,7 +75,11 @@ class CryptoRepository @Inject constructor(
         }
     }
 
-    fun updateCoinThreshold(coinSymbol: String, newThreshold: Double, isForBtcTurk: Boolean = false) {
+    fun updateCoinThreshold(
+        coinSymbol: String,
+        newThreshold: Double,
+        isForBtcTurk: Boolean = false
+    ) {
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
         val key = if (isForBtcTurk) "${coinSymbol}_threshold_btc" else "${coinSymbol}_threshold"
         prefs.edit().putFloat(key, newThreshold.toFloat()).apply()
@@ -98,7 +102,10 @@ class CryptoRepository @Inject constructor(
 
     fun getGlobalThreshold(): Double {
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        return prefs.getFloat("global_threshold", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+        return prefs.getFloat(
+            "global_threshold",
+            Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+        ).toDouble()
     }
 
     fun updateAllThresholds(newThreshold: Double) {
@@ -135,9 +142,14 @@ class CryptoRepository @Inject constructor(
         _coinDataList.value = updatedList
     }
 
-    fun updateCoinAlertStatus(coinSymbol: String, isActive: Boolean, isForBtcTurk: Boolean = false) {
+    fun updateCoinAlertStatus(
+        coinSymbol: String,
+        isActive: Boolean,
+        isForBtcTurk: Boolean = false
+    ) {
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        val key = if (isForBtcTurk) "${coinSymbol}_alert_active_btc" else "${coinSymbol}_alert_active"
+        val key =
+            if (isForBtcTurk) "${coinSymbol}_alert_active_btc" else "${coinSymbol}_alert_active"
         prefs.edit().putBoolean(key, isActive).apply()
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -240,11 +252,23 @@ class CryptoRepository @Inject constructor(
                     Constants.Numeric.DEFAULT_DIFFERENCE
                 }
 
-                val savedThresholdParibu = prefs.getFloat("${coin.symbol}_threshold", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
-                val savedThresholdBtc = prefs.getFloat("${coin.symbol}_threshold_btc", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                val savedThresholdParibu = prefs.getFloat(
+                    "${coin.symbol}_threshold",
+                    Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                ).toDouble()
+                val savedThresholdBtc = prefs.getFloat(
+                    "${coin.symbol}_threshold_btc",
+                    Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                ).toDouble()
 
-                val savedSoundLevel = prefs.getInt("${coin.symbol}_sound_level", Constants.Numeric.DEFAULT_SOUND_LEVEL)
-                val savedSoundLevelBtc = prefs.getInt("${coin.symbol}_sound_level_btc", Constants.Numeric.DEFAULT_SOUND_LEVEL)
+                val savedSoundLevel = prefs.getInt(
+                    "${coin.symbol}_sound_level",
+                    Constants.Numeric.DEFAULT_SOUND_LEVEL
+                )
+                val savedSoundLevelBtc = prefs.getInt(
+                    "${coin.symbol}_sound_level_btc",
+                    Constants.Numeric.DEFAULT_SOUND_LEVEL
+                )
 
                 val savedAlertActive = prefs.getBoolean("${coin.symbol}_alert_active", true)
                 val savedAlertActiveBtc = prefs.getBoolean("${coin.symbol}_alert_active_btc", true)
@@ -279,8 +303,15 @@ class CryptoRepository @Inject constructor(
         coins.forEach { coin ->
             coin.symbol?.let { symbol ->
                 coin.paribuDifference?.let { difference ->
-                    val threshold = prefs.getFloat("${symbol}_threshold", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
-                    val isAlertActive = prefs.getBoolean("${symbol}_alert_active", coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE)
+                    val threshold = prefs.getFloat(
+                        "${symbol}_threshold",
+                        coin.alertThreshold?.toFloat()
+                            ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                    ).toDouble()
+                    val isAlertActive = prefs.getBoolean(
+                        "${symbol}_alert_active",
+                        coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE
+                    )
 
                     if (isAlertActive && kotlin.math.abs(difference) > threshold) {
                         opportunities.add(
@@ -295,8 +326,15 @@ class CryptoRepository @Inject constructor(
                 }
 
                 coin.btcturkDifference?.let { difference ->
-                    val threshold = prefs.getFloat("${symbol}_threshold_btc", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
-                    val isAlertActive = prefs.getBoolean("${symbol}_alert_active_btc", coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE)
+                    val threshold = prefs.getFloat(
+                        "${symbol}_threshold_btc",
+                        coin.alertThreshold?.toFloat()
+                            ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                    ).toDouble()
+                    val isAlertActive = prefs.getBoolean(
+                        "${symbol}_alert_active_btc",
+                        coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE
+                    )
 
                     if (isAlertActive && kotlin.math.abs(difference) > threshold) {
                         opportunities.add(

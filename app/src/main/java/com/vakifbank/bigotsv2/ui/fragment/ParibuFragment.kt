@@ -9,8 +9,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.databinding.FragmentCryptoListBinding
+import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.ui.adapter.CoinAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.ParibuViewModel
@@ -25,7 +25,7 @@ class ParibuFragment : Fragment() {
 
     private val mainViewModel: MainViewModel by activityViewModels()
 
-    private val paribuViewModel: ParibuViewModel by viewModels ()
+    private val paribuViewModel: ParibuViewModel by viewModels()
 
     private lateinit var coinAdapter: CoinAdapter
 
@@ -48,7 +48,8 @@ class ParibuFragment : Fragment() {
         binding.run {
             ivExchangeLogo.setImageResource(paribuViewModel.getExchangeIcon())
             tvExchangeName.text = paribuViewModel.getExchangeName()
-            tvHeaderExchange.text = paribuViewModel.getExchangeName()}
+            tvHeaderExchange.text = paribuViewModel.getExchangeName()
+        }
     }
 
     private fun setupRecyclerView() {

@@ -46,7 +46,8 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        binding.seekBarMasterVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.seekBarMasterVolume.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 updateVolumeText(progress)
             }
@@ -56,11 +57,16 @@ class SettingsFragment : Fragment() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val volume = binding.seekBarMasterVolume.progress
                 saveVolumeSettings(volume)
-                Toast.makeText(requireContext(), "Ses seviyesi: ${volume * 100 / 15}%", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Ses seviyesi: ${volume * 100 / 15}%",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         })
 
-        binding.seekBarRefreshRate.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.seekBarRefreshRate.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 updateRefreshRateText(progress)
             }
@@ -70,7 +76,8 @@ class SettingsFragment : Fragment() {
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val rate = getRefreshRateFromProgress(binding.seekBarRefreshRate.progress)
                 saveRefreshRateSettings(rate)
-                Toast.makeText(requireContext(), "Yenileme hızı: ${rate}s", Toast.LENGTH_SHORT).show()
+                Toast.makeText(requireContext(), "Yenileme hızı: ${rate}s", Toast.LENGTH_SHORT)
+                    .show()
             }
         })
 

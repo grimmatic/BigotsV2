@@ -2,7 +2,6 @@ package com.vakifbank.bigotsv2.ui.fragment
 
 import android.app.Dialog
 import android.content.ActivityNotFoundException
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
@@ -13,7 +12,6 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.fragment.app.DialogFragment
-import com.vakifbank.bigotsv2.R
 import com.vakifbank.bigotsv2.databinding.FragmentCoinDetailsDialogBinding
 import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.utils.Constants
@@ -125,7 +123,8 @@ class CoinDetailsDialog : DialogFragment() {
     }
 
     private fun setupClickListeners() {
-        binding.seekBarThreshold.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+        binding.seekBarThreshold.setOnSeekBarChangeListener(object :
+            SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val threshold = progress / 10.0
                 binding.etThreshold.setText(threshold.toString())
@@ -195,7 +194,8 @@ class CoinDetailsDialog : DialogFragment() {
             Toast.makeText(requireContext(), "Ayarlar kaydedildi", Toast.LENGTH_SHORT).show()
             dismissAllowingStateLoss()
         } catch (e: NumberFormatException) {
-            Toast.makeText(requireContext(), "Geçerli bir eşik değeri girin", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Geçerli bir eşik değeri girin", Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -206,13 +206,11 @@ class CoinDetailsDialog : DialogFragment() {
                 if (isFromBtcTurk) {
                     val btcTurkSymbol = symbol.lowercase() + "try"
                     val url = if (isTrade) {
-                       // "btcturkpro://host/trade/$btcTurkSymbol"
+                        // "btcturkpro://host/trade/$btcTurkSymbol"
                         "btcturkpro://deeplink?screenId=TRADE_BTCTRY"
 
                         //web sayfası intenti =                         "https://kripto.btcturk.com/pro/al-sat/NEO_TRY"
-                    }
-
-                    else {
+                    } else {
                         "btcturkpro://host/wallet"
                     }
                     intent.data = Uri.parse(url)
@@ -242,11 +240,16 @@ class CoinDetailsDialog : DialogFragment() {
             try {
                 val binanceSymbol = symbol.lowercase() + "usdt"
                 val intent = Intent(Intent.ACTION_VIEW)
-                intent.data = Uri.parse("bnc://app.binance.com/trade/trade?at=spot&symbol=$binanceSymbol")
+                intent.data =
+                    Uri.parse("bnc://app.binance.com/trade/trade?at=spot&symbol=$binanceSymbol")
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 startActivity(intent)
             } catch (e: ActivityNotFoundException) {
-                Toast.makeText(requireContext(), "Binance uygulaması bulunamadı", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    requireContext(),
+                    "Binance uygulaması bulunamadı",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         }
     }
@@ -258,7 +261,8 @@ class CoinDetailsDialog : DialogFragment() {
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         } catch (e: ActivityNotFoundException) {
-            Toast.makeText(requireContext(), "Binance uygulaması bulunamadı", Toast.LENGTH_SHORT).show()
+            Toast.makeText(requireContext(), "Binance uygulaması bulunamadı", Toast.LENGTH_SHORT)
+                .show()
         }
     }
 
@@ -269,6 +273,7 @@ class CoinDetailsDialog : DialogFragment() {
     fun setOnSoundLevelChangedListener(listener: (Int) -> Unit) {
         onSoundLevelChanged = listener
     }
+
     fun setOnDialogDismissedListener(listener: () -> Unit) {
         onDialogDismissed = listener
     }

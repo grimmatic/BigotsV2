@@ -7,8 +7,8 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.vakifbank.bigotsv2.R
-import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.databinding.ItemCoinBinding
+import com.vakifbank.bigotsv2.domain.model.CoinData
 import kotlin.math.abs
 
 class CoinAdapter(
@@ -49,12 +49,14 @@ class CoinAdapter(
                         tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
 
                     }
+
                     ExchangeType.BTCTURK -> {
                         tvParibuPrice.text = "₺${String.format("%.2f", coin.btcturkPrice)}"
                         setupDifferenceDisplay(coin.btcturkDifference, coin.alertThreshold)
                         tvBinancePrice.text = "₺${String.format("%.2f", coin.binancePriceBtcTurk)}"
 
                     }
+
                     ExchangeType.BINANCE -> {
                         tvParibuPrice.text = "₺${String.format("%.2f", coin.binancePrice)}"
                         setupDifferenceDisplay(0.0, coin.alertThreshold)
@@ -76,12 +78,14 @@ class CoinAdapter(
             val isPositive = diff > 0
 
             binding.apply {
-                tvPriceDifference.text = "${if (isPositive) "+" else ""}${String.format("%.2f", diff)}%"
+                tvPriceDifference.text =
+                    "${if (isPositive) "+" else ""}${String.format("%.2f", diff)}%"
 
                 val colorRes = when {
                     absDiff > threshold -> {
                         if (isPositive) R.color.success_color else R.color.error_color
                     }
+
                     else -> R.color.text_secondary
                 }
                 tvPriceDifference.setTextColor(ContextCompat.getColor(itemView.context, colorRes))

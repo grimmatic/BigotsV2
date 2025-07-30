@@ -14,9 +14,9 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.vakifbank.bigotsv2.CryptoArbitrageApplication
 import com.vakifbank.bigotsv2.R
+import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.domain.model.Exchange
-import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.ui.activity.MainActivity
 import com.vakifbank.bigotsv2.utils.Constants
 import com.vakifbank.bigotsv2.utils.MediaPlayerManager
@@ -56,6 +56,7 @@ class ArbitrageService : Service() {
     }
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
+
     @Inject
     lateinit var repository: CryptoRepository
     private var updateJob: Job? = null
@@ -175,14 +176,25 @@ class ArbitrageService : Service() {
                 }
 
                 val threshold = if (opportunity.exchange == Exchange.BTCTURK) {
-                    prefs.getFloat("${symbol}_threshold_btc", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                    prefs.getFloat(
+                        "${symbol}_threshold_btc",
+                        coin.alertThreshold?.toFloat()
+                            ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                    ).toDouble()
                 } else {
-                    prefs.getFloat("${symbol}_threshold", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                    prefs.getFloat(
+                        "${symbol}_threshold",
+                        coin.alertThreshold?.toFloat()
+                            ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                    ).toDouble()
                 }
 
                 val difference = kotlin.math.abs(opportunity.difference ?: 0.0)
 
-                Log.d("ArbitrageService", "$symbol ($exchange): isActive=$isAlertActive, threshold=$threshold, difference=$difference")
+                Log.d(
+                    "ArbitrageService",
+                    "$symbol ($exchange): isActive=$isAlertActive, threshold=$threshold, difference=$difference"
+                )
 
                 if (isAlertActive && difference > threshold) {
                     currentlyPlayingOpportunities[opportunityId] = opportunity
@@ -193,13 +205,17 @@ class ArbitrageService : Service() {
 
         stopInactiveSounds()
     }
+
     private fun stopInactiveSounds() {
         previousPlayingOpportunities.keys.forEach { opportunityId ->
             if (!currentlyPlayingOpportunities.containsKey(opportunityId)) {
                 val opportunity = previousPlayingOpportunities[opportunityId]
                 opportunity?.coin?.symbol?.let { symbol ->
                     val soundResource = SoundMapping.getSoundResource(symbol)
-                    Log.d("ArbitrageService", "Stopping sound for $symbol (opportunityId: $opportunityId)")
+                    Log.d(
+                        "ArbitrageService",
+                        "Stopping sound for $symbol (opportunityId: $opportunityId)"
+                    )
                     mediaPlayerManager.stopSound(soundResource)
                 }
             }

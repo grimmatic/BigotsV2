@@ -2,18 +2,18 @@ package com.vakifbank.bigotsv2.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.domain.model.Exchange
-import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.utils.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class BtcturkViewModel @Inject constructor(
@@ -115,6 +115,7 @@ class BtcturkViewModel @Inject constructor(
                 if (isPositive) com.vakifbank.bigotsv2.R.color.success_color
                 else com.vakifbank.bigotsv2.R.color.error_color
             }
+
             else -> com.vakifbank.bigotsv2.R.color.text_secondary
         }
     }

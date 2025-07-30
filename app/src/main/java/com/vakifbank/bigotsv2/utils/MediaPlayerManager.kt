@@ -3,7 +3,6 @@ package com.vakifbank.bigotsv2.utils
 import android.content.Context
 import android.media.AudioAttributes
 import android.media.MediaPlayer
-import android.util.Log
 import java.util.concurrent.ConcurrentHashMap
 
 class MediaPlayerManager private constructor(private val context: Context) {
@@ -51,7 +50,10 @@ class MediaPlayerManager private constructor(private val context: Context) {
                         .build()
                 )
 
-                setDataSource(context, android.net.Uri.parse("android.resource://${context.packageName}/$soundResource"))
+                setDataSource(
+                    context,
+                    android.net.Uri.parse("android.resource://${context.packageName}/$soundResource")
+                )
 
                 isLooping = true
 
@@ -154,7 +156,10 @@ class MediaPlayerManager private constructor(private val context: Context) {
                         .build()
                 )
 
-                setDataSource(context, android.net.Uri.parse("android.resource://${context.packageName}/$soundResource"))
+                setDataSource(
+                    context,
+                    android.net.Uri.parse("android.resource://${context.packageName}/$soundResource")
+                )
 
                 isLooping = false
 

@@ -3,18 +3,18 @@ package com.vakifbank.bigotsv2.ui.viewmodel
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.domain.model.CoinData
-import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.service.ServiceManager
 import com.vakifbank.bigotsv2.utils.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 @HiltViewModel
 class MainViewModel @Inject constructor(
@@ -29,6 +29,7 @@ class MainViewModel @Inject constructor(
         observeData()
         fetchInitialData()
     }
+
     private fun loadGlobalThreshold() {
         viewModelScope.launch {
             val savedThreshold = repository.getGlobalThreshold()

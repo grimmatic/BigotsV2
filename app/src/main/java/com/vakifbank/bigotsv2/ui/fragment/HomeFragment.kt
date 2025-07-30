@@ -10,8 +10,8 @@ import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
-import com.vakifbank.bigotsv2.domain.model.HomeTabConfig
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
+import com.vakifbank.bigotsv2.domain.model.HomeTabConfig
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import com.vakifbank.bigotsv2.utils.Constants
@@ -72,6 +72,7 @@ class HomeFragment : Fragment() {
         updateUsdTryRateForCurrentTab(0)
 
     }
+
     private fun updateUsdTryRateForCurrentTab(position: Int) {
         val currentBinding = _binding ?: return
 
@@ -81,6 +82,7 @@ class HomeFragment : Fragment() {
             else -> viewModel.getFormattedUsdTryRate()
         }
     }
+
     private fun setupFabActions() {
         val currentBinding = _binding ?: return
 
@@ -90,7 +92,8 @@ class HomeFragment : Fragment() {
 
         currentBinding.btnSetAllThresholds.setOnClickListener {
             val thresholdText = currentBinding.etThreshold.text.toString()
-            val threshold = thresholdText.toDoubleOrNull() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
+            val threshold =
+                thresholdText.toDoubleOrNull() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
             viewModel.setAllThresholds(threshold)
         }
     }
@@ -110,16 +113,17 @@ class HomeFragment : Fragment() {
         val currentBinding = _binding ?: return
 
         currentBinding.run {
-            tvBtcPrice.text=state.btcPrice
+            tvBtcPrice.text = state.btcPrice
             updateUsdTryRateForCurrentTab(currentTabPosition)
             fabStartStop.setImageResource(viewModel.getServiceStatusIcon())
-            tvServiceStatus.text= viewModel.getServiceStatusText()
+            tvServiceStatus.text = viewModel.getServiceStatusText()
             statusIndicator.setBackgroundResource(viewModel.getStatusIndicatorBackground())
         }
 
         /*if (state.isRefreshing) {
         }*/
     }
+
     private fun updateThresholdHint(globalThreshold: Double) {
         val currentBinding = _binding ?: return
 

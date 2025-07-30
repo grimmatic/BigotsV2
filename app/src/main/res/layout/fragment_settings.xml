@@ -254,7 +254,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:text="Tüm coin ayarlarını varsayılan değerlere döndürür:\n• Tüm ses seviyeleri: 15 (Max)\n• Tüm threshold değerleri: 2.5%\n• Veri yenileme hızı: 2 saniye"
+                    android:text="Tüm coin ayarlarını varsayılan değerlere döndürür:\n• Tüm ses seviyeleri: %100\n• Tüm eşik değerleri: 2.5%\n• Veri yenileme hızı: 2 saniye"
                     android:textColor="@color/text_secondary"
                     android:textSize="14sp"
                     android:lineSpacingExtra="2dp" />
