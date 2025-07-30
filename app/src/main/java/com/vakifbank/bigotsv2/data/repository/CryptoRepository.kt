@@ -1,5 +1,6 @@
 package com.vakifbank.bigotsv2.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
 import com.vakifbank.bigotsv2.domain.model.CoinData
@@ -8,13 +9,13 @@ import com.vakifbank.bigotsv2.domain.model.SupportedCoins
 import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
 import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
-import com.vakifbank.bigotsv2.data.service.ApiClient
 import com.vakifbank.bigotsv2.data.service.BinanceApiService
 import com.vakifbank.bigotsv2.data.service.BtcTurkApiService
 import com.vakifbank.bigotsv2.data.service.ParibuApiService
 import com.vakifbank.bigotsv2.utils.Constants
-import jakarta.inject.Inject
-import jakarta.inject.Singleton
+import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -25,25 +26,9 @@ import kotlinx.coroutines.flow.asStateFlow
 class CryptoRepository @Inject constructor(
     private val paribuApi: ParibuApiService,
     private val binanceApi: BinanceApiService,
-    private val btcturkApi: BtcTurkApiService
+    private val btcturkApi: BtcTurkApiService,
+    @ApplicationContext private val context: Context
 ) {
-
-    companion object {
-        @Volatile
-        private var INSTANCE: CryptoRepository? = null
-
-        fun getInstance(
-            paribuApi: ParibuApiService,
-            binanceApi: BinanceApiService,
-            btcturkApi: BtcTurkApiService
-        ): CryptoRepository {
-            return INSTANCE ?: synchronized(this) {
-                INSTANCE ?: CryptoRepository(paribuApi, binanceApi, btcturkApi).also {
-                    INSTANCE = it
-                }
-            }
-        }
-    }
 
     private val _coinDataList = MutableStateFlow<List<CoinData>>(emptyList())
     val coinDataList: Flow<List<CoinData>> = _coinDataList.asStateFlow()
@@ -57,7 +42,6 @@ class CryptoRepository @Inject constructor(
 
     private val _usdTryRateBtcTurk = MutableStateFlow(Constants.Numeric.DEFAULT_PRICE)
     val usdTryRateBtcTurk: Flow<Double> = _usdTryRateBtcTurk.asStateFlow()
-
 
     suspend fun fetchAllData() {
         try {
@@ -91,12 +75,84 @@ class CryptoRepository @Inject constructor(
         }
     }
 
+    // Coin ayarlarını güncelleme metodları
+    fun updateCoinThreshold(coinSymbol: String, newThreshold: Double, isForBtcTurk: Boolean = false) {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val key = if (isForBtcTurk) "${coinSymbol}_threshold_btc" else "${coinSymbol}_threshold"
+        prefs.edit().putFloat(key, newThreshold.toFloat()).apply()
+
+        // Mevcut coin listesini güncelle
+        val updatedList = _coinDataList.value.map { coin ->
+            if (coin.symbol == coinSymbol) {
+                coin.copy(alertThreshold = newThreshold)
+            } else coin
+        }
+        _coinDataList.value = updatedList
+
+        // Arbitraj fırsatlarını yeniden hesapla
+        val opportunities = findArbitrageOpportunities(updatedList)
+        _arbitrageOpportunities.value = opportunities
+    }
+
+    fun updateAllThresholds(newThreshold: Double) {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+
+        // Tüm coinler için threshold'u güncelle
+        SupportedCoins.values().forEach { coin ->
+            editor.putFloat("${coin.symbol}_threshold", newThreshold.toFloat())
+            editor.putFloat("${coin.symbol}_threshold_btc", newThreshold.toFloat())
+        }
+        editor.apply()
+
+        // Mevcut coin listesini güncelle
+        val updatedList = _coinDataList.value.map { coin ->
+            coin.copy(alertThreshold = newThreshold)
+        }
+        _coinDataList.value = updatedList
+
+        // Arbitraj fırsatlarını yeniden hesapla
+        val opportunities = findArbitrageOpportunities(updatedList)
+        _arbitrageOpportunities.value = opportunities
+    }
+
+    fun updateCoinSoundLevel(coinSymbol: String, soundLevel: Int, isForBtcTurk: Boolean = false) {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val key = if (isForBtcTurk) "${coinSymbol}_sound_level_btc" else "${coinSymbol}_sound_level"
+        prefs.edit().putInt(key, soundLevel).apply()
+
+        // Mevcut coin listesini güncelle
+        val updatedList = _coinDataList.value.map { coin ->
+            if (coin.symbol == coinSymbol) {
+                coin.copy(soundLevel = soundLevel)
+            } else coin
+        }
+        _coinDataList.value = updatedList
+    }
+
+    fun updateCoinAlertStatus(coinSymbol: String, isActive: Boolean, isForBtcTurk: Boolean = false) {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val key = if (isForBtcTurk) "${coinSymbol}_alert_active_btc" else "${coinSymbol}_alert_active"
+        prefs.edit().putBoolean(key, isActive).apply()
+
+        // Mevcut coin listesini güncelle
+        val updatedList = _coinDataList.value.map { coin ->
+            if (coin.symbol == coinSymbol) {
+                coin.copy(isAlertActive = isActive)
+            } else coin
+        }
+        _coinDataList.value = updatedList
+
+        // Arbitraj fırsatlarını yeniden hesapla
+        val opportunities = findArbitrageOpportunities(updatedList)
+        _arbitrageOpportunities.value = opportunities
+    }
+
     private suspend fun fetchParibuData(): Map<String, ParibuTicker> {
         return try {
             val response = paribuApi.getTickers()
             if (response.isSuccessful) {
                 val data = response.body() ?: emptyMap()
-                data[Constants.ApiSymbols.USDT_TL]?.let { usdtTicker -> }
                 data
             } else {
                 emptyMap()
@@ -108,7 +164,7 @@ class CryptoRepository @Inject constructor(
 
     private suspend fun fetchBinanceData(): Map<String?, BinanceTickerResponse> {
         return try {
-            val response =binanceApi.getBookTickers()
+            val response = binanceApi.getBookTickers()
             if (response.isSuccessful) {
                 val data = response.body()?.associateBy { it.symbol } ?: emptyMap()
                 data
@@ -143,8 +199,8 @@ class CryptoRepository @Inject constructor(
         btcturkData: Map<String?, BtcTurkTicker>
     ): List<CoinData> {
         val paribuUsdtRate = _usdTryRate.value
-
         val btcturkUsdtRate = _usdTryRateBtcTurk.value
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
 
         return SupportedCoins.values().mapNotNull { coin ->
             try {
@@ -181,6 +237,17 @@ class CryptoRepository @Inject constructor(
                     Constants.Numeric.DEFAULT_DIFFERENCE
                 }
 
+                // SharedPreferences'tan değerleri oku - Paribu için
+                val savedThresholdParibu = prefs.getFloat("${coin.symbol}_threshold", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                val savedThresholdBtc = prefs.getFloat("${coin.symbol}_threshold_btc", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+
+                val savedSoundLevel = prefs.getInt("${coin.symbol}_sound_level", Constants.Numeric.DEFAULT_SOUND_LEVEL)
+                val savedSoundLevelBtc = prefs.getInt("${coin.symbol}_sound_level_btc", Constants.Numeric.DEFAULT_SOUND_LEVEL)
+
+                // Alert'i varsayılan olarak aktif yap
+                val savedAlertActive = prefs.getBoolean("${coin.symbol}_alert_active", true)
+                val savedAlertActiveBtc = prefs.getBoolean("${coin.symbol}_alert_active_btc", true)
+
                 CoinData(
                     symbol = coin.symbol,
                     name = coin.displayName,
@@ -191,9 +258,9 @@ class CryptoRepository @Inject constructor(
                     binancePriceUsd = binanceUsdPrice,
                     paribuDifference = paribuDifference,
                     btcturkDifference = btcturkDifference,
-                    alertThreshold = Constants.Numeric.DEFAULT_ALERT_THRESHOLD,
-                    soundLevel = Constants.Numeric.DEFAULT_SOUND_LEVEL,
-                    isAlertActive = Constants.Defaults.ALERT_ACTIVE
+                    alertThreshold = savedThresholdParibu, // Varsayılan olarak Paribu threshold'u kullan
+                    soundLevel = savedSoundLevel,
+                    isAlertActive = savedAlertActive
                 )
             } catch (e: Exception) {
                 null
@@ -201,47 +268,49 @@ class CryptoRepository @Inject constructor(
         }
     }
 
-
-    private fun calculateDifferencePercentage(localPrice: Double, binancePrice: Double): Double {
-        return if (localPrice > Constants.Numeric.DEFAULT_PRICE && binancePrice > Constants.Numeric.DEFAULT_PRICE) {
-            ((localPrice - binancePrice) * Constants.Numeric.PERCENTAGE_MULTIPLIER) / localPrice
-        } else {
-            Constants.Numeric.DEFAULT_DIFFERENCE
-        }
-    }
-
     private fun findArbitrageOpportunities(coins: List<CoinData>): List<ArbitrageOpportunity> {
         val opportunities = mutableListOf<ArbitrageOpportunity>()
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
 
         coins.forEach { coin ->
-            coin.paribuDifference?.let { difference ->
-                if (kotlin.math.abs(difference) > coin.alertThreshold!!) {
-                    opportunities.add(
-                        ArbitrageOpportunity(
-                            coin = coin,
-                            exchange = Exchange.PARIBU,
-                            difference = difference,
-                            isPositive = difference > Constants.Numeric.DEFAULT_DIFFERENCE
-                        )
-                    )
-                }
-            }
+            coin.symbol?.let { symbol ->
+                // Paribu için kontrol
+                coin.paribuDifference?.let { difference ->
+                    val threshold = prefs.getFloat("${symbol}_threshold", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                    val isAlertActive = prefs.getBoolean("${symbol}_alert_active", coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE)
 
-            coin.btcturkDifference?.let { difference ->
-                if (kotlin.math.abs(difference) > coin.alertThreshold!!) {
-                    opportunities.add(
-                        ArbitrageOpportunity(
-                            coin = coin,
-                            exchange = Exchange.BTCTURK,
-                            difference = difference,
-                            isPositive = difference > Constants.Numeric.DEFAULT_DIFFERENCE
+                    if (isAlertActive && kotlin.math.abs(difference) > threshold) {
+                        opportunities.add(
+                            ArbitrageOpportunity(
+                                coin = coin,
+                                exchange = Exchange.PARIBU,
+                                difference = difference,
+                                isPositive = difference > Constants.Numeric.DEFAULT_DIFFERENCE
+                            )
                         )
-                    )
+                    }
+                }
+
+                // BTCTurk için kontrol
+                coin.btcturkDifference?.let { difference ->
+                    val threshold = prefs.getFloat("${symbol}_threshold_btc", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                    val isAlertActive = prefs.getBoolean("${symbol}_alert_active_btc", coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE)
+
+                    if (isAlertActive && kotlin.math.abs(difference) > threshold) {
+                        opportunities.add(
+                            ArbitrageOpportunity(
+                                coin = coin,
+                                exchange = Exchange.BTCTURK,
+                                difference = difference,
+                                isPositive = difference > Constants.Numeric.DEFAULT_DIFFERENCE
+                            )
+                        )
+                    }
                 }
             }
         }
 
-        return opportunities.sortedByDescending { kotlin.math.abs(it.difference!!) }
+        return opportunities.sortedByDescending { kotlin.math.abs(it.difference ?: 0.0) }
     }
 
     fun getSupportedCoins(): List<SupportedCoins> = SupportedCoins.values().toList()

@@ -1,6 +1,5 @@
 package com.vakifbank.bigotsv2.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
@@ -9,8 +8,7 @@ import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.utils.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,8 +17,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class ParibuViewModel @Inject constructor(
-    private val repository: CryptoRepository,
-    @ApplicationContext private val context: Context
+    private val repository: CryptoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ParibuUiState())
@@ -138,43 +135,19 @@ class ParibuViewModel @Inject constructor(
 
     fun updateCoinAlert(coin: CoinData, isActive: Boolean) {
         viewModelScope.launch {
-            val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-            prefs.edit().putBoolean("${coin.symbol}_alert_active", isActive).apply()
-
-            val updatedList = _uiState.value.coinList.map {
-                if (it.symbol == coin.symbol) {
-                    it.copy(isAlertActive = isActive)
-                } else it
-            }
-            _uiState.value = _uiState.value.copy(coinList = updatedList)
+            coin.symbol?.let { repository.updateCoinAlertStatus(it, isActive, false) }
         }
     }
 
     fun updateCoinThreshold(coin: CoinData, threshold: Double) {
         viewModelScope.launch {
-            val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-            prefs.edit().putFloat("${coin.symbol}_threshold", threshold.toFloat()).apply()
-
-            val updatedList = _uiState.value.coinList.map {
-                if (it.symbol == coin.symbol) {
-                    it.copy(alertThreshold = threshold)
-                } else it
-            }
-            _uiState.value = _uiState.value.copy(coinList = updatedList)
+            coin.symbol?.let { repository.updateCoinThreshold(it, threshold, false) }
         }
     }
 
     fun updateCoinSoundLevel(coin: CoinData, soundLevel: Int) {
         viewModelScope.launch {
-            val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-            prefs.edit().putInt("${coin.symbol}_sound_level", soundLevel).apply()
-
-            val updatedList = _uiState.value.coinList.map {
-                if (it.symbol == coin.symbol) {
-                    it.copy(soundLevel = soundLevel)
-                } else it
-            }
-            _uiState.value = _uiState.value.copy(coinList = updatedList)
+            coin.symbol?.let { repository.updateCoinSoundLevel(it, soundLevel, false) }
         }
     }
 }

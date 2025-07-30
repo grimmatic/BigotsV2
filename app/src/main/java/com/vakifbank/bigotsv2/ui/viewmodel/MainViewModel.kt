@@ -9,7 +9,7 @@ import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.service.ServiceManager
 import com.vakifbank.bigotsv2.utils.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +37,7 @@ class MainViewModel @Inject constructor(
                 repository.usdTryRate,
                 repository.usdTryRateBtcTurk,
                 ServiceManager.isServiceRunning
-            ) { coins, opportunities, usdTryRate,usdTryRateBtcTurk,isServiceRunning ->
+            ) { coins, opportunities, usdTryRate, usdTryRateBtcTurk, isServiceRunning ->
                 MainUiState(
                     coinList = coins,
                     arbitrageOpportunities = opportunities,
@@ -95,12 +95,17 @@ class MainViewModel @Inject constructor(
 
     fun setAllThresholds(threshold: Double) {
         viewModelScope.launch {
+            repository.updateAllThresholds(threshold)
             _uiState.value = _uiState.value.copy(globalThreshold = threshold)
         }
     }
 
     fun getFormattedUsdTryRate(): String {
         return "₺${String.format("%.3f", _uiState.value.usdTryRate)}"
+    }
+
+    fun getFormattedUsdTryRateBtcTurk(): String {
+        return "₺${String.format("%.3f", _uiState.value.usdTryRateBtcTurk)}"
     }
 
     fun getServiceStatusText(): String {
@@ -131,8 +136,9 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun updateThreshold(coinSymbol: String, threshold: Double) {
+    fun updateThreshold(coinSymbol: String, threshold: Double, isForBtcTurk: Boolean = false) {
         viewModelScope.launch {
+            repository.updateCoinThreshold(coinSymbol, threshold, isForBtcTurk)
         }
     }
 
@@ -142,9 +148,6 @@ class MainViewModel @Inject constructor(
 
     fun sortCoins(sortType: SortType) {
         _uiState.value = _uiState.value.copy(sortType = sortType)
-    }
-    fun getFormattedUsdTryRateBtcTurk(): String {
-        return "₺${String.format("%.3f", _uiState.value.usdTryRateBtcTurk)}"
     }
 }
 
@@ -171,4 +174,3 @@ enum class SortType {
 enum class FilterType {
     ALL, ALERTS_ONLY, POSITIVE_ONLY, NEGATIVE_ONLY
 }
-

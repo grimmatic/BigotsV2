@@ -10,6 +10,7 @@ import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.vakifbank.bigotsv2.CryptoArbitrageApplication
 import com.vakifbank.bigotsv2.R
@@ -18,6 +19,8 @@ import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.ui.activity.MainActivity
 import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.utils.MediaPlayerManager
+import com.vakifbank.bigotsv2.utils.SoundMapping
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +38,7 @@ class ArbitrageService : Service() {
     companion object {
         private const val NOTIFICATION_ID = 1
         private const val UPDATE_INTERVAL = 2000L
+        private const val SOUND_PLAY_INTERVAL = 3000L // Ses çalma aralığı (3 saniye)
 
         fun startService(context: Context) {
             val intent = Intent(context, ArbitrageService::class.java)
@@ -53,16 +57,22 @@ class ArbitrageService : Service() {
 
     private val serviceScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     @Inject
-    lateinit var repository : CryptoRepository
+    lateinit var repository: CryptoRepository
     private var updateJob: Job? = null
     private var notificationJob: Job? = null
+    private var soundPlayJob: Job? = null
+
+    private lateinit var mediaPlayerManager: MediaPlayerManager
+    private val currentlyPlayingOpportunities = mutableMapOf<String, ArbitrageOpportunity>()
 
     override fun onCreate() {
         super.onCreate()
+        mediaPlayerManager = MediaPlayerManager.getInstance(this)
         createNotificationChannel()
         startForegroundService()
         startDataCollection()
         startNotificationUpdates()
+        startContinuousSoundPlayback()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -75,7 +85,9 @@ class ArbitrageService : Service() {
         super.onDestroy()
         updateJob?.cancel()
         notificationJob?.cancel()
+        soundPlayJob?.cancel()
         serviceScope.cancel()
+        mediaPlayerManager.releaseAll()
     }
 
     private fun createNotificationChannel() {
@@ -127,6 +139,98 @@ class ArbitrageService : Service() {
         notificationJob = serviceScope.launch {
             repository.arbitrageOpportunities.collect { opportunities ->
                 updateNotification(opportunities)
+                updateCurrentOpportunities(opportunities)
+            }
+        }
+    }
+
+    private fun startContinuousSoundPlayback() {
+        soundPlayJob = serviceScope.launch {
+            while (isActive) {
+                playActiveOpportunitySounds()
+                delay(SOUND_PLAY_INTERVAL)
+            }
+        }
+    }
+
+    private fun updateCurrentOpportunities(opportunities: List<ArbitrageOpportunity>) {
+        val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+
+        // Mevcut fırsatları temizle
+        currentlyPlayingOpportunities.clear()
+
+        Log.d("ArbitrageService", "Checking ${opportunities.size} opportunities")
+
+        // Yeni fırsatları kontrol et ve ekle
+        opportunities.forEach { opportunity ->
+            opportunity.coin?.let { coin ->
+                val symbol = coin.symbol ?: return@let
+                val exchange = opportunity.exchange?.name?.lowercase() ?: ""
+                val opportunityId = "${symbol}_$exchange"
+
+                // Alert aktif mi kontrol et
+                val isAlertActive = if (opportunity.exchange == Exchange.BTCTURK) {
+                    prefs.getBoolean("${symbol}_alert_active_btc", coin.isAlertActive ?: false)
+                } else {
+                    prefs.getBoolean("${symbol}_alert_active", coin.isAlertActive ?: false)
+                }
+
+                // Threshold'u kontrol et
+                val threshold = if (opportunity.exchange == Exchange.BTCTURK) {
+                    prefs.getFloat("${symbol}_threshold_btc", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                } else {
+                    prefs.getFloat("${symbol}_threshold", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+                }
+
+                val difference = kotlin.math.abs(opportunity.difference ?: 0.0)
+
+                Log.d("ArbitrageService", "$symbol: isActive=$isAlertActive, threshold=$threshold, difference=$difference")
+
+                // Alert aktif ve threshold'dan yüksekse listeye ekle
+                if (isAlertActive && difference > threshold) {
+                    currentlyPlayingOpportunities[opportunityId] = opportunity
+                    Log.d("ArbitrageService", "Added $symbol to playing opportunities")
+                }
+            }
+        }
+
+        Log.d("ArbitrageService", "Currently playing: ${currentlyPlayingOpportunities.size} opportunities")
+    }
+
+    private fun playActiveOpportunitySounds() {
+        if (currentlyPlayingOpportunities.isEmpty()) {
+            Log.d("ArbitrageService", "No opportunities to play sounds for")
+            return
+        }
+
+        val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+
+        Log.d("ArbitrageService", "Playing sounds for ${currentlyPlayingOpportunities.size} opportunities")
+
+        currentlyPlayingOpportunities.values.forEach { opportunity ->
+            opportunity.coin?.let { coin ->
+                val symbol = coin.symbol ?: return@let
+                val exchange = opportunity.exchange
+
+                // Ses seviyesini al - her seferinde güncel değeri oku
+                val soundLevel = if (exchange == Exchange.BTCTURK) {
+                    prefs.getInt("${symbol}_sound_level_btc", coin.soundLevel ?: 15)
+                } else {
+                    prefs.getInt("${symbol}_sound_level", coin.soundLevel ?: 15)
+                }
+
+                Log.d("ArbitrageService", "Playing sound for $symbol with volume $soundLevel")
+
+                // Ses çal - her seferinde güncel volume ile
+                if (soundLevel > 0) {
+                    val soundResource = SoundMapping.getSoundResource(symbol)
+                    val volumeLevel = soundLevel / 15.0f
+                    mediaPlayerManager.playSound(soundResource, volumeLevel)
+                } else {
+                    // Ses seviyesi 0 ise sesi durdur
+                    val soundResource = SoundMapping.getSoundResource(symbol)
+                    mediaPlayerManager.stopSound(soundResource)
+                }
             }
         }
     }
@@ -159,8 +263,10 @@ class ArbitrageService : Service() {
         val content = if (opportunities.isEmpty()) {
             "Arbitraj fırsatı bekleniyor..."
         } else {
+            val activeCount = currentlyPlayingOpportunities.size
             val top3 = opportunities.take(3)
             buildString {
+                append("$activeCount aktif alarm | ")
                 top3.forEachIndexed { index, opportunity ->
                     val exchangeName = when (opportunity.exchange) {
                         Exchange.PARIBU -> Constants.ExchangeNames.PARIBU
@@ -168,8 +274,8 @@ class ArbitrageService : Service() {
                         else -> "Unknown"
                     }
 
-                    val sign = if (opportunity.isPositive!!) "+" else ""
-                    append("${index + 1}. ${opportunity.coin?.symbol} ")
+                    val sign = if (opportunity.isPositive == true) "+" else ""
+                    append("${opportunity.coin?.symbol} ")
                     append("($exchangeName): $sign%.2f%%".format(opportunity.difference))
 
                     if (index < top3.size - 1) append(" | ")

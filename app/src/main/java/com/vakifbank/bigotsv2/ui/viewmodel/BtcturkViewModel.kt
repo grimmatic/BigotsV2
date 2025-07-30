@@ -1,6 +1,5 @@
 package com.vakifbank.bigotsv2.ui.viewmodel
 
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vakifbank.bigotsv2.domain.model.ArbitrageOpportunity
@@ -9,8 +8,7 @@ import com.vakifbank.bigotsv2.domain.model.Exchange
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
 import com.vakifbank.bigotsv2.utils.Constants
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
-import jakarta.inject.Inject
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,8 +17,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class BtcturkViewModel @Inject constructor(
-    private val repository: CryptoRepository,
-    @ApplicationContext private val context: Context
+    private val repository: CryptoRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(BtcturkUiState())
@@ -53,7 +50,7 @@ class BtcturkViewModel @Inject constructor(
 
     private fun filterBtcturkCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.btcturkPrice!! > 0 && kotlin.math.abs(coin.btcturkDifference?:0.0) >= 0.01
+            coin.btcturkPrice!! > 0 && kotlin.math.abs(coin.btcturkDifference ?: 0.0) >= 0.01
         }.sortedByDescending {
             it.btcturkDifference?.let { x -> kotlin.math.abs(x) }
         }
@@ -138,43 +135,19 @@ class BtcturkViewModel @Inject constructor(
 
     fun updateCoinAlert(coin: CoinData, isActive: Boolean) {
         viewModelScope.launch {
-            val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-            prefs.edit().putBoolean("${coin.symbol}_alert_active_btc", isActive).apply()
-
-            val updatedList = _uiState.value.coinList.map {
-                if (it.symbol == coin.symbol) {
-                    it.copy(isAlertActive = isActive)
-                } else it
-            }
-            _uiState.value = _uiState.value.copy(coinList = updatedList)
+            coin.symbol?.let { repository.updateCoinAlertStatus(it, isActive, true) }
         }
     }
 
     fun updateCoinThreshold(coin: CoinData, threshold: Double) {
         viewModelScope.launch {
-            val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-            prefs.edit().putFloat("${coin.symbol}_threshold_btc", threshold.toFloat()).apply()
-
-            val updatedList = _uiState.value.coinList.map {
-                if (it.symbol == coin.symbol) {
-                    it.copy(alertThreshold = threshold)
-                } else it
-            }
-            _uiState.value = _uiState.value.copy(coinList = updatedList)
+            coin.symbol?.let { repository.updateCoinThreshold(it, threshold, true) }
         }
     }
 
     fun updateCoinSoundLevel(coin: CoinData, soundLevel: Int) {
         viewModelScope.launch {
-            val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-            prefs.edit().putInt("${coin.symbol}_sound_level_btc", soundLevel).apply()
-
-            val updatedList = _uiState.value.coinList.map {
-                if (it.symbol == coin.symbol) {
-                    it.copy(soundLevel = soundLevel)
-                } else it
-            }
-            _uiState.value = _uiState.value.copy(coinList = updatedList)
+            coin.symbol?.let { repository.updateCoinSoundLevel(it, soundLevel, true) }
         }
     }
 }
