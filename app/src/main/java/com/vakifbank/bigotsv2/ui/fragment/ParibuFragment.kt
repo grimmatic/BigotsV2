@@ -97,16 +97,22 @@ class ParibuFragment : Fragment() {
         dialog.setOnSoundLevelChangedListener { soundLevel ->
             paribuViewModel.updateCoinSoundLevel(coin, soundLevel)
         }
+        dialog.setOnDialogDismissedListener {
+            paribuViewModel.hideCoinDetailDialog()
+        }
 
         dialog.show(childFragmentManager, "CoinDetailsDialog")
     }
 
     private fun showCoinDetailDialog(coin: CoinData) {
         showCoinDetailsDialog(coin)
+        paribuViewModel.hideCoinDetailDialog()
     }
 
     private fun showCoinOptionsMenu(coin: CoinData) {
         showCoinDetailsDialog(coin)
+        paribuViewModel.hideOptionsMenu()
+
     }
 
     override fun onDestroyView() {

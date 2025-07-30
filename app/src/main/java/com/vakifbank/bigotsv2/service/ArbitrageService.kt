@@ -64,6 +64,7 @@ class ArbitrageService : Service() {
 
     private lateinit var mediaPlayerManager: MediaPlayerManager
     private val currentlyPlayingOpportunities = mutableMapOf<String, ArbitrageOpportunity>()
+    private val previousPlayingOpportunities = mutableMapOf<String, ArbitrageOpportunity>()
 
     override fun onCreate() {
         super.onCreate()
@@ -155,7 +156,8 @@ class ArbitrageService : Service() {
 
     private fun updateCurrentOpportunities(opportunities: List<ArbitrageOpportunity>) {
         val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-
+        previousPlayingOpportunities.clear()
+        previousPlayingOpportunities.putAll(currentlyPlayingOpportunities)
         currentlyPlayingOpportunities.clear()
 
         Log.d("ArbitrageService", "Checking ${opportunities.size} opportunities")
@@ -184,7 +186,6 @@ class ArbitrageService : Service() {
 
                 if (isAlertActive && difference > threshold) {
                     currentlyPlayingOpportunities[opportunityId] = opportunity
-                } else {
                 }
             }
         }
@@ -193,16 +194,12 @@ class ArbitrageService : Service() {
         stopInactiveSounds()
     }
     private fun stopInactiveSounds() {
-        val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-
-        val currentlyPlayingKeys = currentlyPlayingOpportunities.keys.toList()
-
-        currentlyPlayingKeys.forEach { opportunityId ->
-            val opportunity = currentlyPlayingOpportunities[opportunityId]
-            opportunity?.coin?.symbol?.let { symbol ->
-                val soundResource = SoundMapping.getSoundResource(symbol)
-
-                if (!currentlyPlayingOpportunities.containsKey(opportunityId)) {
+        previousPlayingOpportunities.keys.forEach { opportunityId ->
+            if (!currentlyPlayingOpportunities.containsKey(opportunityId)) {
+                val opportunity = previousPlayingOpportunities[opportunityId]
+                opportunity?.coin?.symbol?.let { symbol ->
+                    val soundResource = SoundMapping.getSoundResource(symbol)
+                    Log.d("ArbitrageService", "Stopping sound for $symbol (opportunityId: $opportunityId)")
                     mediaPlayerManager.stopSound(soundResource)
                 }
             }
@@ -211,6 +208,7 @@ class ArbitrageService : Service() {
 
     private fun playActiveOpportunitySounds() {
         if (currentlyPlayingOpportunities.isEmpty()) {
+            mediaPlayerManager.stopAllSounds()
             return
         }
 

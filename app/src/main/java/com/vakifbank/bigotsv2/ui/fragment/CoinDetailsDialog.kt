@@ -30,6 +30,7 @@ class CoinDetailsDialog : DialogFragment() {
 
     private var onThresholdChanged: ((Double) -> Unit)? = null
     private var onSoundLevelChanged: ((Int) -> Unit)? = null
+    private var onDialogDismissed: (() -> Unit)? = null
 
     companion object {
         private const val ARG_COIN_DATA = "coin_data"
@@ -75,6 +76,16 @@ class CoinDetailsDialog : DialogFragment() {
             (resources.displayMetrics.widthPixels * 0.95).toInt(),
             ViewGroup.LayoutParams.WRAP_CONTENT
         )
+    }
+
+    override fun onDismiss(dialog: android.content.DialogInterface) {
+        super.onDismiss(dialog)
+        onDialogDismissed?.invoke()
+    }
+
+    override fun onCancel(dialog: android.content.DialogInterface) {
+        super.onCancel(dialog)
+        onDialogDismissed?.invoke()
     }
 
     private fun setupViews() {
@@ -257,6 +268,9 @@ class CoinDetailsDialog : DialogFragment() {
 
     fun setOnSoundLevelChangedListener(listener: (Int) -> Unit) {
         onSoundLevelChanged = listener
+    }
+    fun setOnDialogDismissedListener(listener: () -> Unit) {
+        onDialogDismissed = listener
     }
 
     override fun onDestroyView() {

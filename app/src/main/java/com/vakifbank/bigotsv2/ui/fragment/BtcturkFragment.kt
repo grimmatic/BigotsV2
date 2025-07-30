@@ -93,15 +93,21 @@ class BtcturkFragment : Fragment() {
             btcturkViewModel.updateCoinSoundLevel(coin, soundLevel)
         }
 
+        dialog.setOnDialogDismissedListener {
+            btcturkViewModel.hideCoinDetailDialog()
+        }
+
         dialog.show(childFragmentManager, "CoinDetailsDialog")
     }
 
     private fun showCoinDetailDialog(coin: CoinData) {
         showCoinDetailsDialog(coin)
+        btcturkViewModel.hideCoinDetailDialog()
     }
 
     private fun showCoinOptionsMenu(coin: CoinData) {
         showCoinDetailsDialog(coin)
+        btcturkViewModel.hideOptionsMenu()
     }
 
     override fun onDestroyView() {
