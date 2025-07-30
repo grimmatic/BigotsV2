@@ -123,8 +123,6 @@ class HomeFragment : Fragment() {
     private fun updateThresholdHint(globalThreshold: Double) {
         val currentBinding = _binding ?: return
 
-        currentBinding.etThreshold.hint = globalThreshold.toString()
-
         if (currentBinding.etThreshold.text.isNullOrEmpty()) {
             currentBinding.etThreshold.setText(globalThreshold.toString())
         }

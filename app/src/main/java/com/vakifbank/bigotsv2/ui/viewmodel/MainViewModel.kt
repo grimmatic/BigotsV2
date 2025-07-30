@@ -25,20 +25,14 @@ class MainViewModel @Inject constructor(
     val uiState: StateFlow<MainUiState> = _uiState.asStateFlow()
 
     init {
+        loadGlobalThreshold()
         observeData()
         fetchInitialData()
-        loadGlobalThreshold()
     }
     private fun loadGlobalThreshold() {
         viewModelScope.launch {
-            repository.coinDataList.collect { coins ->
-                if (coins.isNotEmpty()) {
-                    val averageThreshold = coins.mapNotNull { it.alertThreshold }.average()
-                    if (averageThreshold > 0) {
-                        _uiState.value = _uiState.value.copy(globalThreshold = averageThreshold)
-                    }
-                }
-            }
+            val savedThreshold = repository.getGlobalThreshold()
+            _uiState.value = _uiState.value.copy(globalThreshold = savedThreshold)
         }
     }
 
@@ -52,6 +46,7 @@ class MainViewModel @Inject constructor(
                 repository.usdTryRateBtcTurk,
                 ServiceManager.isServiceRunning
             ) { coins, opportunities, usdTryRate, usdTryRateBtcTurk, isServiceRunning ->
+                val currentGlobalThreshold = _uiState.value.globalThreshold
                 MainUiState(
                     coinList = coins,
                     arbitrageOpportunities = opportunities,
@@ -60,6 +55,7 @@ class MainViewModel @Inject constructor(
                     isServiceRunning = isServiceRunning,
                     btcPrice = getBtcPrice(coins, usdTryRate),
                     btcPriceUsd = getBtcPriceUsd(coins, usdTryRate),
+                    globalThreshold = currentGlobalThreshold,
                     isLoading = false
                 )
             }.collect { newState ->

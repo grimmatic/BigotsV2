@@ -91,9 +91,21 @@ class CryptoRepository @Inject constructor(
         _arbitrageOpportunities.value = opportunities
     }
 
+    fun saveGlobalThreshold(threshold: Double) {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        prefs.edit().putFloat("global_threshold", threshold.toFloat()).apply()
+    }
+
+    fun getGlobalThreshold(): Double {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        return prefs.getFloat("global_threshold", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
+    }
+
     fun updateAllThresholds(newThreshold: Double) {
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
         val editor = prefs.edit()
+        editor.putFloat("global_threshold", newThreshold.toFloat())
+
 
         SupportedCoins.values().forEach { coin ->
             editor.putFloat("${coin.symbol}_threshold", newThreshold.toFloat())

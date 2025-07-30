@@ -84,7 +84,6 @@ class CoinDetailsDialog : DialogFragment() {
 
             val currentThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
             binding.etThreshold.setText(currentThreshold.toString())
-            binding.etThreshold.hint = currentThreshold.toString()
 
             binding.seekBarThreshold.progress = (currentThreshold * 10).toInt()
             binding.seekBarThreshold.max = 100
