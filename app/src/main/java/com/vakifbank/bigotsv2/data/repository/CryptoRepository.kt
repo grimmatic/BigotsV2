@@ -319,4 +319,25 @@ class CryptoRepository @Inject constructor(
     fun getSupportedCoinsForParibu(): List<String> = SupportedCoins.getAllParibuSymbols()
     fun getSupportedCoinsForBtcturk(): List<String> = SupportedCoins.getAllBtcturkSymbols()
     fun getSupportedCoinsForBinance(): List<String> = SupportedCoins.getAllBinanceSymbols()
+
+    fun updateAllSoundLevels(level: Int) {
+        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val editor = prefs.edit()
+
+        SupportedCoins.values().forEach { coin ->
+            editor.putInt("${coin.symbol}_sound_level", level)
+            editor.putInt("${coin.symbol}_sound_level_btc", level)
+        }
+        editor.apply()
+
+        val updatedList = _coinDataList.value.map { coin ->
+            coin.copy(soundLevel = level)
+        }
+        _coinDataList.value = updatedList
+    }
+
+    fun updateRefreshRate(rate: Float) {
+        val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+        prefs.edit().putFloat("refresh_rate", rate).apply()
+    }
 }

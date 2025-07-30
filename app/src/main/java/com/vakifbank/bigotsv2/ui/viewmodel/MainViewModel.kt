@@ -159,6 +159,18 @@ class MainViewModel @Inject constructor(
     fun sortCoins(sortType: SortType) {
         _uiState.value = _uiState.value.copy(sortType = sortType)
     }
+
+    fun updateAllSoundLevels(level: Int) {
+        viewModelScope.launch {
+            repository.updateAllSoundLevels(level)
+        }
+    }
+
+    fun updateRefreshRate(rate: Float) {
+        viewModelScope.launch {
+            repository.updateRefreshRate(rate)
+        }
+    }
 }
 
 data class MainUiState(
