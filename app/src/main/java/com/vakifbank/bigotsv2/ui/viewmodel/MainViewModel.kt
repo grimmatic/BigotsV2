@@ -27,7 +27,21 @@ class MainViewModel @Inject constructor(
     init {
         observeData()
         fetchInitialData()
+        loadGlobalThreshold()
     }
+    private fun loadGlobalThreshold() {
+        viewModelScope.launch {
+            repository.coinDataList.collect { coins ->
+                if (coins.isNotEmpty()) {
+                    val averageThreshold = coins.mapNotNull { it.alertThreshold }.average()
+                    if (averageThreshold > 0) {
+                        _uiState.value = _uiState.value.copy(globalThreshold = averageThreshold)
+                    }
+                }
+            }
+        }
+    }
+
 
     private fun observeData() {
         viewModelScope.launch {

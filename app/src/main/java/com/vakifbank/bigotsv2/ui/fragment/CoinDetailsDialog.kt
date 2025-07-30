@@ -16,6 +16,7 @@ import androidx.fragment.app.DialogFragment
 import com.vakifbank.bigotsv2.R
 import com.vakifbank.bigotsv2.databinding.FragmentCoinDetailsDialogBinding
 import com.vakifbank.bigotsv2.domain.model.CoinData
+import com.vakifbank.bigotsv2.utils.Constants
 import com.vakifbank.bigotsv2.utils.SoundMapping
 
 class CoinDetailsDialog : DialogFragment() {
@@ -81,11 +82,15 @@ class CoinDetailsDialog : DialogFragment() {
             binding.tvCoinName.text = coin.name
             binding.tvCoinSymbol.text = coin.symbol
 
-            binding.etThreshold.setText(coin.alertThreshold.toString())
-            binding.seekBarThreshold.progress = ((coin.alertThreshold ?: 2.5) * 10).toInt()
+            val currentThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
+            binding.etThreshold.setText(currentThreshold.toString())
+            binding.etThreshold.hint = currentThreshold.toString()
+
+            binding.seekBarThreshold.progress = (currentThreshold * 10).toInt()
             binding.seekBarThreshold.max = 100
 
-            binding.seekBarVolume.progress = coin.soundLevel ?: 15
+            val currentSoundLevel = coin.soundLevel ?: Constants.Numeric.DEFAULT_SOUND_LEVEL
+            binding.seekBarVolume.progress = currentSoundLevel
             binding.seekBarVolume.max = 15
 
             setupExchangeButtons(coin)

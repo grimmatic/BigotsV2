@@ -184,14 +184,11 @@ class ArbitrageService : Service() {
 
                 if (isAlertActive && difference > threshold) {
                     currentlyPlayingOpportunities[opportunityId] = opportunity
-                    Log.d("ArbitrageService", "Added $symbol ($exchange) to playing opportunities - difference: $difference > threshold: $threshold")
                 } else {
-                    Log.d("ArbitrageService", "Removed/Skipped $symbol ($exchange) - difference: $difference <= threshold: $threshold or alert inactive")
                 }
             }
         }
 
-        Log.d("ArbitrageService", "Currently playing: ${currentlyPlayingOpportunities.size} opportunities")
 
         stopInactiveSounds()
     }
@@ -206,7 +203,6 @@ class ArbitrageService : Service() {
                 val soundResource = SoundMapping.getSoundResource(symbol)
 
                 if (!currentlyPlayingOpportunities.containsKey(opportunityId)) {
-                    Log.d("ArbitrageService", "Stopping sound for $symbol - no longer above threshold")
                     mediaPlayerManager.stopSound(soundResource)
                 }
             }
@@ -215,13 +211,11 @@ class ArbitrageService : Service() {
 
     private fun playActiveOpportunitySounds() {
         if (currentlyPlayingOpportunities.isEmpty()) {
-            Log.d("ArbitrageService", "No opportunities to play sounds for")
             return
         }
 
         val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
 
-        Log.d("ArbitrageService", "Playing sounds for ${currentlyPlayingOpportunities.size} opportunities")
 
         currentlyPlayingOpportunities.values.forEach { opportunity ->
             opportunity.coin?.let { coin ->
@@ -234,7 +228,6 @@ class ArbitrageService : Service() {
                     prefs.getInt("${symbol}_sound_level", coin.soundLevel ?: 15)
                 }
 
-                Log.d("ArbitrageService", "Playing sound for $symbol with volume $soundLevel")
 
                 if (soundLevel > 0) {
                     val soundResource = SoundMapping.getSoundResource(symbol)
