@@ -75,13 +75,11 @@ class CryptoRepository @Inject constructor(
         }
     }
 
-    // Coin ayarlarını güncelleme metodları
     fun updateCoinThreshold(coinSymbol: String, newThreshold: Double, isForBtcTurk: Boolean = false) {
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
         val key = if (isForBtcTurk) "${coinSymbol}_threshold_btc" else "${coinSymbol}_threshold"
         prefs.edit().putFloat(key, newThreshold.toFloat()).apply()
 
-        // Mevcut coin listesini güncelle
         val updatedList = _coinDataList.value.map { coin ->
             if (coin.symbol == coinSymbol) {
                 coin.copy(alertThreshold = newThreshold)
@@ -89,7 +87,6 @@ class CryptoRepository @Inject constructor(
         }
         _coinDataList.value = updatedList
 
-        // Arbitraj fırsatlarını yeniden hesapla
         val opportunities = findArbitrageOpportunities(updatedList)
         _arbitrageOpportunities.value = opportunities
     }
@@ -98,20 +95,17 @@ class CryptoRepository @Inject constructor(
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
         val editor = prefs.edit()
 
-        // Tüm coinler için threshold'u güncelle
         SupportedCoins.values().forEach { coin ->
             editor.putFloat("${coin.symbol}_threshold", newThreshold.toFloat())
             editor.putFloat("${coin.symbol}_threshold_btc", newThreshold.toFloat())
         }
         editor.apply()
 
-        // Mevcut coin listesini güncelle
         val updatedList = _coinDataList.value.map { coin ->
             coin.copy(alertThreshold = newThreshold)
         }
         _coinDataList.value = updatedList
 
-        // Arbitraj fırsatlarını yeniden hesapla
         val opportunities = findArbitrageOpportunities(updatedList)
         _arbitrageOpportunities.value = opportunities
     }
@@ -121,7 +115,6 @@ class CryptoRepository @Inject constructor(
         val key = if (isForBtcTurk) "${coinSymbol}_sound_level_btc" else "${coinSymbol}_sound_level"
         prefs.edit().putInt(key, soundLevel).apply()
 
-        // Mevcut coin listesini güncelle
         val updatedList = _coinDataList.value.map { coin ->
             if (coin.symbol == coinSymbol) {
                 coin.copy(soundLevel = soundLevel)
@@ -135,7 +128,6 @@ class CryptoRepository @Inject constructor(
         val key = if (isForBtcTurk) "${coinSymbol}_alert_active_btc" else "${coinSymbol}_alert_active"
         prefs.edit().putBoolean(key, isActive).apply()
 
-        // Mevcut coin listesini güncelle
         val updatedList = _coinDataList.value.map { coin ->
             if (coin.symbol == coinSymbol) {
                 coin.copy(isAlertActive = isActive)
@@ -143,7 +135,6 @@ class CryptoRepository @Inject constructor(
         }
         _coinDataList.value = updatedList
 
-        // Arbitraj fırsatlarını yeniden hesapla
         val opportunities = findArbitrageOpportunities(updatedList)
         _arbitrageOpportunities.value = opportunities
     }
@@ -237,16 +228,17 @@ class CryptoRepository @Inject constructor(
                     Constants.Numeric.DEFAULT_DIFFERENCE
                 }
 
-                // SharedPreferences'tan değerleri oku - Paribu için
                 val savedThresholdParibu = prefs.getFloat("${coin.symbol}_threshold", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
                 val savedThresholdBtc = prefs.getFloat("${coin.symbol}_threshold_btc", Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
 
                 val savedSoundLevel = prefs.getInt("${coin.symbol}_sound_level", Constants.Numeric.DEFAULT_SOUND_LEVEL)
                 val savedSoundLevelBtc = prefs.getInt("${coin.symbol}_sound_level_btc", Constants.Numeric.DEFAULT_SOUND_LEVEL)
 
-                // Alert'i varsayılan olarak aktif yap
                 val savedAlertActive = prefs.getBoolean("${coin.symbol}_alert_active", true)
                 val savedAlertActiveBtc = prefs.getBoolean("${coin.symbol}_alert_active_btc", true)
+
+                val currentCoin = _coinDataList.value.find { it.symbol == coin.symbol }
+                val currentThreshold = currentCoin?.alertThreshold ?: savedThresholdParibu
 
                 CoinData(
                     symbol = coin.symbol,
@@ -258,9 +250,9 @@ class CryptoRepository @Inject constructor(
                     binancePriceUsd = binanceUsdPrice,
                     paribuDifference = paribuDifference,
                     btcturkDifference = btcturkDifference,
-                    alertThreshold = savedThresholdParibu, // Varsayılan olarak Paribu threshold'u kullan
-                    soundLevel = savedSoundLevel,
-                    isAlertActive = savedAlertActive
+                    alertThreshold = currentThreshold,
+                    soundLevel = currentCoin?.soundLevel ?: savedSoundLevel,
+                    isAlertActive = currentCoin?.isAlertActive ?: savedAlertActive
                 )
             } catch (e: Exception) {
                 null
@@ -274,7 +266,6 @@ class CryptoRepository @Inject constructor(
 
         coins.forEach { coin ->
             coin.symbol?.let { symbol ->
-                // Paribu için kontrol
                 coin.paribuDifference?.let { difference ->
                     val threshold = prefs.getFloat("${symbol}_threshold", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
                     val isAlertActive = prefs.getBoolean("${symbol}_alert_active", coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE)
@@ -291,7 +282,6 @@ class CryptoRepository @Inject constructor(
                     }
                 }
 
-                // BTCTurk için kontrol
                 coin.btcturkDifference?.let { difference ->
                     val threshold = prefs.getFloat("${symbol}_threshold_btc", coin.alertThreshold?.toFloat() ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()).toDouble()
                     val isAlertActive = prefs.getBoolean("${symbol}_alert_active_btc", coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE)
