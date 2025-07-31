@@ -123,14 +123,6 @@ class MainViewModel @Inject constructor(
         return if (_uiState.value.isServiceRunning) "Çalışıyor" else "Durduruldu"
     }
 
-    fun getServiceStatusIcon(): Int {
-        return if (_uiState.value.isServiceRunning) {
-            com.vakifbank.bigotsv2.R.drawable.ic_stop
-        } else {
-            com.vakifbank.bigotsv2.R.drawable.ic_play_arrow
-        }
-    }
-
     fun getStatusIndicatorBackground(): Int {
         return if (_uiState.value.isServiceRunning) {
             com.vakifbank.bigotsv2.R.drawable.circle_green

@@ -24,38 +24,49 @@
                 android:id="@+id/toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="@color/primary_color"
+                android:background="@drawable/toolbar_gradient"
                 app:menu="@menu/main_menu"
                 app:navigationIconTint="@color/white"
                 app:title="Bigots"
-                app:titleTextColor="@color/white" />
+                app:titleTextColor="@color/white"
+                app:titleTextAppearance="@style/ToolbarTitleStyle" />
 
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="4dp"
-                app:strokeWidth="0dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="6dp"
+                app:strokeWidth="0dp"
+                app:cardBackgroundColor="@color/white">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_bitcoin"
+                            android:layout_marginBottom="4dp"
+                            app:tint="@color/bitcoin_color" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="BTC/USD"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textSize="11sp"
+                            android:fontFamily="sans-serif-medium" />
 
                         <TextView
                             android:id="@+id/tvBtcPrice"
@@ -64,22 +75,38 @@
                             android:text="$0.00"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-black" />
 
                     </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/surface_variant"
+                        android:layout_marginHorizontal="16dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/exchange_usd_dollar_to_try_lira_icon"
+                            android:layout_marginBottom="4dp"
+                            app:tint="@color/primary_color" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="USD/TRY"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textSize="11sp"
+                            android:fontFamily="sans-serif-medium" />
 
                         <TextView
                             android:id="@+id/tvUsdTryRate"
@@ -88,22 +115,38 @@
                             android:text="₺0.00"
                             android:textColor="@color/text_primary"
                             android:textSize="16sp"
-                            android:textStyle="bold" />
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-black" />
 
                     </LinearLayout>
+
+                    <View
+                        android:layout_width="1dp"
+                        android:layout_height="match_parent"
+                        android:background="@color/surface_variant"
+                        android:layout_marginHorizontal="16dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:orientation="vertical">
+                        android:orientation="vertical"
+                        android:gravity="center">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_power_settings_new"
+                            android:layout_marginBottom="4dp"
+                            app:tint="@color/success_color" />
 
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="Durum"
                             android:textColor="@color/text_secondary"
-                            android:textSize="12sp" />
+                            android:textSize="11sp"
+                            android:fontFamily="sans-serif-medium" />
 
                         <LinearLayout
                             android:layout_width="wrap_content"
@@ -115,8 +158,8 @@
                                 android:id="@+id/statusIndicator"
                                 android:layout_width="8dp"
                                 android:layout_height="8dp"
-                                android:layout_marginEnd="4dp"
-                                android:background="@drawable/circle_red" />
+                                android:layout_marginEnd="6dp"
+                                android:background="@drawable/status_indicator_animated" />
 
                             <TextView
                                 android:id="@+id/tvServiceStatus"
@@ -124,7 +167,9 @@
                                 android:layout_height="wrap_content"
                                 android:text="Durduruldu"
                                 android:textColor="@color/text_primary"
-                                android:textSize="14sp" />
+                                android:textSize="13sp"
+                                android:textStyle="bold"
+                                android:fontFamily="sans-serif-medium" />
 
                         </LinearLayout>
 
@@ -139,23 +184,39 @@
                 android:layout_height="wrap_content"
                 android:layout_marginHorizontal="16dp"
                 android:layout_marginBottom="16dp"
-                app:cardCornerRadius="12dp"
-                app:cardElevation="2dp">
+                app:cardCornerRadius="16dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/white">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:text="Alarm Eşiği (%)"
-                        android:textColor="@color/text_primary"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_notifications_active"
+                            android:layout_marginEnd="8dp"
+                            app:tint="@color/primary_color" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Alarm Eşiği (%)"
+                            android:textColor="@color/text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:fontFamily="sans-serif-medium" />
+
+                    </LinearLayout>
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -166,28 +227,38 @@
                         <com.google.android.material.textfield.TextInputLayout
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_marginEnd="8dp"
+                            android:layout_marginEnd="12dp"
                             android:layout_weight="1"
-                            app:boxStrokeColor="@color/primary_color">
+                            app:boxStrokeColor="@color/primary_color"
+                            app:boxCornerRadiusBottomEnd="12dp"
+                            app:boxCornerRadiusBottomStart="12dp"
+                            app:boxCornerRadiusTopEnd="12dp"
+                            app:boxCornerRadiusTopStart="12dp"
+                            app:hintTextColor="@color/primary_color"
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                             <com.google.android.material.textfield.TextInputEditText
                                 android:id="@+id/etThreshold"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
                                 android:inputType="numberDecimal"
-                                android:textColor="@color/black"
-                                android:textSize="16sp" />
+                                android:textColor="@color/text_primary"
+                                android:textSize="16sp"
+                                android:hint="Eşik değeri" />
 
                         </com.google.android.material.textfield.TextInputLayout>
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnSetAllThresholds"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            style="@style/Widget.MaterialComponents.Button"
                             android:layout_width="wrap_content"
                             android:layout_height="56dp"
                             android:text="Tümüne Uygula"
                             android:textSize="12sp"
-                            app:icon="@drawable/ic_edit"
+                            android:textStyle="bold"
+                            android:paddingHorizontal="16dp"
+                            app:cornerRadius="12dp"
+                            app:icon="@drawable/ic_done_all"
                             app:iconSize="18dp" />
 
                     </LinearLayout>
@@ -198,36 +269,60 @@
 
         </com.google.android.material.appbar.AppBarLayout>
 
+        <!-- Modern TabLayout -->
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="16dp"
+            android:layout_marginBottom="8dp"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="2dp"
+            app:cardBackgroundColor="@color/white">
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tabLayout_home_fragment"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@android:color/transparent"
+                app:tabGravity="fill"
+                app:tabIndicatorColor="@color/primary_color"
+                app:tabIndicatorHeight="3dp"
+                app:tabIndicatorFullWidth="false"
+                app:tabIndicatorGravity="bottom"
+                app:tabInlineLabel="true"
+                app:tabMode="fixed"
+                app:tabRippleColor="@color/primary_color"
+                app:tabSelectedTextColor="@color/primary_color"
+                app:tabTextColor="@color/text_secondary"
+                app:tabTextAppearance="@style/TabTextStyle"
+                app:tabPaddingStart="12dp"
+                app:tabPaddingEnd="12dp"
+                app:tabMinWidth="0dp" />
+
+        </com.google.android.material.card.MaterialCardView>
+
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/vp_home"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tabLayout_home_fragment"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@color/background_secondary"
-            android:elevation="8dp"
-            app:tabGravity="fill"
-            app:tabIndicatorColor="@color/primary_color"
-            app:tabInlineLabel="true"
-            app:tabMode="fixed"
-            app:tabSelectedTextColor="@color/primary_color"
-            app:tabTextColor="@color/text_secondary" />
-
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fabStartStop"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="80dp"
-        android:src="@drawable/ic_play_arrow"
+        android:layout_marginBottom="16dp"
+        android:text="Başlat"
+        android:textColor="@color/white"
+        android:textStyle="bold"
         app:backgroundTint="@color/primary_color"
-        app:tint="@color/white" />
+        app:icon="@drawable/ic_play_arrow"
+        app:iconTint="@color/white"
+        app:cornerRadius="28dp"
+        app:elevation="8dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

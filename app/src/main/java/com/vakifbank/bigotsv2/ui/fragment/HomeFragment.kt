@@ -115,13 +115,43 @@ class HomeFragment : Fragment() {
         currentBinding.run {
             tvBtcPrice.text = state.btcPrice
             updateUsdTryRateForCurrentTab(currentTabPosition)
-            fabStartStop.setImageResource(viewModel.getServiceStatusIcon())
+            updateFabState(state.isServiceRunning)
             tvServiceStatus.text = viewModel.getServiceStatusText()
             statusIndicator.setBackgroundResource(viewModel.getStatusIndicatorBackground())
         }
 
         /*if (state.isRefreshing) {
         }*/
+    }
+
+    private fun updateFabState(isServiceRunning: Boolean) {
+        val currentBinding = _binding ?: return
+
+        if (isServiceRunning) {
+            currentBinding.fabStartStop.apply {
+                text = "Durdur"
+                icon = ContextCompat.getDrawable(
+                    requireContext(),
+                    com.vakifbank.bigotsv2.R.drawable.ic_stop
+                )
+                backgroundTintList = ContextCompat.getColorStateList(
+                    requireContext(),
+                    com.vakifbank.bigotsv2.R.color.error_color
+                )
+            }
+        } else {
+            currentBinding.fabStartStop.apply {
+                text = "Başlat"
+                icon = ContextCompat.getDrawable(
+                    requireContext(),
+                    com.vakifbank.bigotsv2.R.drawable.ic_play_arrow
+                )
+                backgroundTintList = ContextCompat.getColorStateList(
+                    requireContext(),
+                    com.vakifbank.bigotsv2.R.color.primary_color
+                )
+            }
+        }
     }
 
     private fun updateThresholdHint(globalThreshold: Double) {
