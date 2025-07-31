@@ -21,6 +21,7 @@ import com.vakifbank.bigotsv2.ui.viewmodel.BtcturkViewModel
 import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import kotlin.math.abs
 
 @AndroidEntryPoint
 class BtcturkFragment : Fragment() {
@@ -34,6 +35,17 @@ class BtcturkFragment : Fragment() {
     private var filteredCoins: List<CoinData> = emptyList()
     private var allCoins: List<CoinData> = emptyList()
     private var isSearchExpanded = false
+
+    private var currentFilterType = FilterType.ALL
+    private var currentSortType = SortType.DIFFERENCE_DESC
+
+    enum class FilterType {
+        ALL, ALERTS_ONLY, POSITIVE_ONLY, NEGATIVE_ONLY
+    }
+
+    enum class SortType {
+        DIFFERENCE_DESC, DIFFERENCE_ASC, NAME_ASC, NAME_DESC, PRICE_DESC, PRICE_ASC
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -85,7 +97,7 @@ class BtcturkFragment : Fragment() {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
-                filterCoins()
+                applyFiltersAndSort()
             }
         })
 
@@ -104,7 +116,6 @@ class BtcturkFragment : Fragment() {
         binding.btnRetry.setOnClickListener {
             mainViewModel.refreshData()
         }
-
     }
 
     private fun toggleSearchExpansion() {
@@ -123,9 +134,16 @@ class BtcturkFragment : Fragment() {
                 .start()
 
             searchButton.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_clear)
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary_color_light))
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.primary_color_light
+                )
+            )
 
             binding.etSearch.requestFocus()
+
+            scrollToTabSection()
 
         } else {
             expandedLayout.animate()
@@ -138,76 +156,133 @@ class BtcturkFragment : Fragment() {
                 .start()
 
             searchButton.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_search)
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    android.R.color.transparent
+                )
+            )
 
             binding.etSearch.setText("")
             clearAllFilters()
         }
     }
 
-    private fun updateChipFilter() {
-        filterCoins()
-        updateResultsInfo()
-        updateSearchButtonState()
-    }
-
-    private fun updateSearchButtonState() {
-
-
-        val searchButton = binding.btnSearchToggle
-
-        if (!isSearchExpanded) {
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary_color_light))
-            searchButton.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.primary_color)
-        } else if (!isSearchExpanded) {
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
-            searchButton.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.text_secondary)
+    private fun scrollToTabSection() {
+        try {
+            val homeFragment = parentFragment as? HomeFragment
+            homeFragment?.scrollToTabSection()
+        } catch (e: Exception) {
         }
     }
 
-    private fun filterCoins() {
+    private fun applyFiltersAndSort() {
         val searchQuery = binding.etSearch.text.toString().lowercase().trim()
 
-        filteredCoins = allCoins.filter { coin ->
-            val matchesSearch = if (searchQuery.isEmpty()) {
-                true
-            } else {
+        var filtered = if (searchQuery.isEmpty()) {
+            allCoins
+        } else {
+            allCoins.filter { coin ->
                 coin.symbol?.lowercase()?.contains(searchQuery) == true ||
                         coin.name?.lowercase()?.contains(searchQuery) == true
             }
+        }
 
+        filtered = when (currentFilterType) {
+            FilterType.ALL -> filtered
+            FilterType.ALERTS_ONLY -> filtered.filter { coin ->
+                val difference = abs(coin.btcturkDifference ?: 0.0)
+                val threshold = coin.alertThreshold ?: 2.5
+                difference > threshold
+            }
 
+            FilterType.POSITIVE_ONLY -> filtered.filter { coin ->
+                (coin.btcturkDifference ?: 0.0) > 0
+            }
 
-            matchesSearch
+            FilterType.NEGATIVE_ONLY -> filtered.filter { coin ->
+                (coin.btcturkDifference ?: 0.0) < 0
+            }
+        }
+
+        filteredCoins = when (currentSortType) {
+            SortType.DIFFERENCE_DESC -> filtered.sortedByDescending {
+                abs(
+                    it.btcturkDifference ?: 0.0
+                )
+            }
+
+            SortType.DIFFERENCE_ASC -> filtered.sortedBy { abs(it.btcturkDifference ?: 0.0) }
+            SortType.NAME_ASC -> filtered.sortedBy { it.symbol }
+            SortType.NAME_DESC -> filtered.sortedByDescending { it.symbol }
+            SortType.PRICE_DESC -> filtered.sortedByDescending { it.btcturkPrice ?: 0.0 }
+            SortType.PRICE_ASC -> filtered.sortedBy { it.btcturkPrice ?: 0.0 }
         }
 
         coinAdapter.submitList(filteredCoins)
         updateResultsInfo()
         updateEmptyState()
+        updateSearchButtonState()
+    }
+
+    private fun updateSearchButtonState() {
+        val hasActiveFilters = binding.etSearch.text.toString().isNotEmpty() ||
+                currentFilterType != FilterType.ALL ||
+                currentSortType != SortType.DIFFERENCE_DESC
+
+        val searchButton = binding.btnSearchToggle
+
+        if (hasActiveFilters && !isSearchExpanded) {
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.primary_color_light
+                )
+            )
+            searchButton.strokeColor =
+                ContextCompat.getColorStateList(requireContext(), R.color.primary_color)
+        } else if (!isSearchExpanded) {
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    android.R.color.transparent
+                )
+            )
+            searchButton.strokeColor =
+                ContextCompat.getColorStateList(requireContext(), R.color.text_secondary)
+        }
     }
 
     private fun updateResultsInfo() {
-        val hasFilters = binding.etSearch.text.toString().isNotEmpty()
+        val hasFilters = binding.etSearch.text.toString().isNotEmpty() ||
+                currentFilterType != FilterType.ALL ||
+                currentSortType != SortType.DIFFERENCE_DESC
 
         if (hasFilters && allCoins.isNotEmpty()) {
             binding.layoutResultsInfo.visibility = View.VISIBLE
-            binding.tvResultsInfo.text = "${allCoins.size} sonuçtan ${filteredCoins.size} tanesi gösteriliyor"
+            binding.tvResultsInfo.text =
+                "${allCoins.size} sonuçtan ${filteredCoins.size} tanesi gösteriliyor"
         } else {
             binding.layoutResultsInfo.visibility = View.GONE
         }
     }
 
     private fun updateEmptyState() {
-        val hasFilters = binding.etSearch.text.toString().isNotEmpty()
+        val hasFilters = binding.etSearch.text.toString().isNotEmpty() ||
+                currentFilterType != FilterType.ALL ||
+                currentSortType != SortType.DIFFERENCE_DESC
+
         when {
             filteredCoins.isEmpty() && allCoins.isEmpty() -> {
                 binding.layoutEmptyState.visibility = View.VISIBLE
                 binding.recyclerViewCoins.visibility = View.GONE
                 binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_search_off)
                 binding.tvEmptyStateTitle.text = "Henüz veri yok"
-                binding.tvEmptyStateMessage.text = "Servisi başlatın ve verilerin gelmesini bekleyin"
+                binding.tvEmptyStateMessage.text =
+                    "Servisi başlatın ve verilerin gelmesini bekleyin"
                 binding.btnRetry.visibility = View.VISIBLE
             }
+
             filteredCoins.isEmpty() && hasFilters -> {
                 binding.layoutEmptyState.visibility = View.VISIBLE
                 binding.recyclerViewCoins.visibility = View.GONE
@@ -216,6 +291,7 @@ class BtcturkFragment : Fragment() {
                 binding.tvEmptyStateMessage.text = "Arama kriterlerinizi değiştirmeyi deneyin"
                 binding.btnRetry.visibility = View.GONE
             }
+
             else -> {
                 binding.layoutEmptyState.visibility = View.GONE
                 binding.recyclerViewCoins.visibility = View.VISIBLE
@@ -225,40 +301,40 @@ class BtcturkFragment : Fragment() {
 
     private fun clearAllFilters() {
         binding.etSearch.setText("")
-
+        currentFilterType = FilterType.ALL
+        currentSortType = SortType.DIFFERENCE_DESC
 
         binding.btnFilter.text = "Tümü"
         binding.btnSort.text = "Fark %"
 
-        filterCoins()
-        updateSearchButtonState()
+        applyFiltersAndSort()
     }
 
     private fun showFilterDialog() {
-        val options = arrayOf("Tümü", "Sadece Alarmlar", "Pozitif Fark", "Negatif Fark")
+        val options = arrayOf("Tümü", "Alarmlar", "Pozitif Fark", "Negatif Fark")
+        val currentSelection = when (currentFilterType) {
+            FilterType.ALL -> 0
+            FilterType.ALERTS_ONLY -> 1
+            FilterType.POSITIVE_ONLY -> 2
+            FilterType.NEGATIVE_ONLY -> 3
+        }
 
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
         builder.setTitle("Filtrele")
-            .setItems(options) { _, which ->
-                when (which) {
-                    0 -> {
-                        clearAllFilters()
-                        binding.btnFilter.text = "Tümü"
-                    }
-                    1 -> {
-                        clearAllFilters()
-                        binding.btnFilter.text = "Alarmlar"
-                    }
-                    2 -> {
-                        clearAllFilters()
-                        binding.btnFilter.text = "Pozitif"
-                    }
-                    3 -> {
-                        clearAllFilters()
-                        binding.btnFilter.text = "Negatif"
-                    }
+            .setSingleChoiceItems(options, currentSelection) { dialog, which ->
+                currentFilterType = when (which) {
+                    0 -> FilterType.ALL
+                    1 -> FilterType.ALERTS_ONLY
+                    2 -> FilterType.POSITIVE_ONLY
+                    3 -> FilterType.NEGATIVE_ONLY
+                    else -> FilterType.ALL
                 }
+
+                binding.btnFilter.text = options[which]
+                applyFiltersAndSort()
+                dialog.dismiss()
             }
+            .setNegativeButton("İptal", null)
         builder.show()
     }
 
@@ -272,10 +348,28 @@ class BtcturkFragment : Fragment() {
             "Fiyat (Düşük→Yüksek)"
         )
 
+        val currentSelection = when (currentSortType) {
+            SortType.DIFFERENCE_DESC -> 0
+            SortType.DIFFERENCE_ASC -> 1
+            SortType.NAME_ASC -> 2
+            SortType.NAME_DESC -> 3
+            SortType.PRICE_DESC -> 4
+            SortType.PRICE_ASC -> 5
+        }
+
         val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
         builder.setTitle("Sırala")
-            .setItems(options) { _, which ->
-                sortCoins(which)
+            .setSingleChoiceItems(options, currentSelection) { dialog, which ->
+                currentSortType = when (which) {
+                    0 -> SortType.DIFFERENCE_DESC
+                    1 -> SortType.DIFFERENCE_ASC
+                    2 -> SortType.NAME_ASC
+                    3 -> SortType.NAME_DESC
+                    4 -> SortType.PRICE_DESC
+                    5 -> SortType.PRICE_ASC
+                    else -> SortType.DIFFERENCE_DESC
+                }
+
                 binding.btnSort.text = when (which) {
                     0 -> "Fark % ↓"
                     1 -> "Fark % ↑"
@@ -285,28 +379,19 @@ class BtcturkFragment : Fragment() {
                     5 -> "Fiyat ↑"
                     else -> "Fark %"
                 }
-            }
-        builder.show()
-    }
 
-    private fun sortCoins(sortType: Int) {
-        filteredCoins = when (sortType) {
-            0 -> filteredCoins.sortedByDescending { kotlin.math.abs(it.btcturkDifference ?: 0.0) }
-            1 -> filteredCoins.sortedBy { kotlin.math.abs(it.btcturkDifference ?: 0.0) }
-            2 -> filteredCoins.sortedBy { it.symbol }
-            3 -> filteredCoins.sortedByDescending { it.symbol }
-            4 -> filteredCoins.sortedByDescending { it.btcturkPrice ?: 0.0 }
-            5 -> filteredCoins.sortedBy { it.btcturkPrice ?: 0.0 }
-            else -> filteredCoins
-        }
-        coinAdapter.submitList(filteredCoins)
+                applyFiltersAndSort()
+                dialog.dismiss()
+            }
+            .setNegativeButton("İptal", null)
+        builder.show()
     }
 
     private fun observeViewModels() {
         viewLifecycleOwner.lifecycleScope.launch {
             btcturkViewModel.uiState.collect { btcturkState ->
                 allCoins = btcturkState.coinList
-                filterCoins()
+                applyFiltersAndSort()
 
                 binding.tvActiveAlerts.text = btcturkViewModel.getActiveAlertText()
 

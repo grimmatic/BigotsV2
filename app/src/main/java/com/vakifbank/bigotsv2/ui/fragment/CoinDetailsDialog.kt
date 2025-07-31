@@ -15,7 +15,6 @@ import androidx.fragment.app.DialogFragment
 import com.vakifbank.bigotsv2.databinding.FragmentCoinDetailsDialogBinding
 import com.vakifbank.bigotsv2.domain.model.CoinData
 import com.vakifbank.bigotsv2.utils.Constants
-import com.vakifbank.bigotsv2.utils.SoundMapping
 
 class CoinDetailsDialog : DialogFragment() {
 
@@ -138,7 +137,7 @@ class CoinDetailsDialog : DialogFragment() {
         binding.seekBarVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 updateVolumePercentage(progress)
-                playTestSound(progress)
+//                playTestSound(progress)
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
@@ -169,25 +168,26 @@ class CoinDetailsDialog : DialogFragment() {
             openBinanceWallet()
         }
     }
+
     private fun updateVolumePercentage(volume: Int) {
         val percentage = (volume * 100) / 15
         binding.tvVolumePercentage.text = "$percentage%"
     }
 
-    private fun playTestSound(volume: Int) {
-        coinData?.symbol?.let { symbol ->
-            val soundRes = SoundMapping.getSoundResource(symbol)
-            try {
-                mediaPlayer?.release()
-                mediaPlayer = MediaPlayer.create(requireContext(), soundRes)
-                val volumeLevel = volume / 15.0f
-                mediaPlayer?.setVolume(volumeLevel, volumeLevel)
-                mediaPlayer?.start()
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+    /*   private fun playTestSound(volume: Int) {
+           coinData?.symbol?.let { symbol ->
+               val soundRes = SoundMapping.getSoundResource(symbol)
+               try {
+                   mediaPlayer?.release()
+                   mediaPlayer = MediaPlayer.create(requireContext(), soundRes)
+                   val volumeLevel = volume / 15.0f
+                   mediaPlayer?.setVolume(volumeLevel, volumeLevel)
+                   mediaPlayer?.start()
+               } catch (e: Exception) {
+                   e.printStackTrace()
+               }
+           }
+       }*/
 
     private fun saveSettings() {
         try {

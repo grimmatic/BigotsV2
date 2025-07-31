@@ -129,7 +129,9 @@ class ArbitrageService : Service() {
             while (isActive) {
                 try {
                     repository.fetchAllData()
-                    delay(UPDATE_INTERVAL)
+                    val prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                    val refreshRate = prefs.getFloat("refresh_rate", 2.0f)
+                    delay((refreshRate * 1000).toLong())
                 } catch (e: Exception) {
                     delay(5000)
                 }

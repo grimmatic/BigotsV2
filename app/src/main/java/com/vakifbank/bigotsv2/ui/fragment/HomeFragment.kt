@@ -43,6 +43,7 @@ class HomeFragment : Fragment() {
         initViewPagerAdapter()
         setupFabActions()
         observeViewModel()
+        setupScrollListener()
     }
 
     private fun initViewPagerAdapter() {
@@ -63,6 +64,7 @@ class HomeFragment : Fragment() {
             tab.text = tabConfig.title
             tab.icon = ContextCompat.getDrawable(requireContext(), tabConfig.iconRes)
         }.attach()
+
         viewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
@@ -70,10 +72,31 @@ class HomeFragment : Fragment() {
                 updateUsdTryRateForCurrentTab(position)
             }
         })
+
         currentBinding.tabLayoutHomeFragment.setTabIconTint(null)
         currentTabPosition = 0
         updateUsdTryRateForCurrentTab(0)
+    }
 
+    private fun setupScrollListener() {
+        binding.vpHome.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                currentTabPosition = position
+                updateUsdTryRateForCurrentTab(position)
+
+                notifyFragmentForSearchScroll()
+            }
+        })
+    }
+
+    private fun notifyFragmentForSearchScroll() {
+    }
+
+    fun scrollToTabSection() {
+        binding.nestedScrollView.post {
+            binding.nestedScrollView.smoothScrollTo(0, binding.tabCard.top)
+        }
     }
 
     private fun updateUsdTryRateForCurrentTab(position: Int) {
@@ -123,9 +146,6 @@ class HomeFragment : Fragment() {
             statusIndicator.setBackgroundResource(viewModel.getStatusIndicatorBackground())
             updateStatusIconColor(state.isServiceRunning)
         }
-
-        /*if (state.isRefreshing) {
-        }*/
     }
 
     private fun updateStatusIconColor(isServiceRunning: Boolean) {
@@ -136,9 +156,11 @@ class HomeFragment : Fragment() {
 
         statusIcon?.let { icon ->
             if (isServiceRunning) {
-                icon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.success_color)
+                icon.imageTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.success_color)
             } else {
-                icon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.error_color)
+                icon.imageTintList =
+                    ContextCompat.getColorStateList(requireContext(), R.color.error_color)
             }
         }
     }

@@ -315,7 +315,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="• Coin bazlı ayarlar için coin listesindeki detay butonlarını kullanın\n• Filtre seçenekleri üst menüde bulunur\n• Değişiklikler anında uygulanır"
+                    android:text="• Coin bazlı ayarlar için coin listesindeki detay butonlarını kullanın\n• Filtre seçeneklerine ana ekrandan ulaşabilirsiniz\n• Değişiklikler anında uygulanır"
                     android:textColor="@color/text_secondary"
                     android:textSize="13sp"
                     android:lineSpacingExtra="2dp" />
