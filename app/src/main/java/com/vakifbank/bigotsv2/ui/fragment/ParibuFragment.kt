@@ -146,11 +146,7 @@ class ParibuFragment : Fragment() {
         }
     }
 
-    private fun updateChipFilter() {
-        filterCoins()
-        updateResultsInfo()
-        updateSearchButtonState()
-    }
+
 
     private fun updateSearchButtonState() {
         val hasActiveFilters = binding.etSearch.text.toString().isNotEmpty()
@@ -176,9 +172,6 @@ class ParibuFragment : Fragment() {
                 coin.symbol?.lowercase()?.contains(searchQuery) == true ||
                         coin.name?.lowercase()?.contains(searchQuery) == true
             }
-
-
-
             matchesSearch
         }
 

@@ -84,7 +84,7 @@ class ParibuViewModel @Inject constructor(
     }
 
     fun getActiveAlertText(): String {
-        return "${_uiState.value.alertCount} aktif alarm"
+        return _uiState.value.alertCount.toString()
     }
 
     fun getExchangeName(): String {
