@@ -29,9 +29,9 @@
 
                 <ImageView
                     android:id="@+id/ivExchangeLogo"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginEnd="12dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
+                    android:layout_marginEnd="6dp"
                     android:src="@drawable/paribu" />
 
                 <LinearLayout
@@ -86,8 +86,6 @@
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginEnd="4dp"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
                         android:padding="0dp"
                         app:cornerRadius="10dp"
                         app:icon="@drawable/ic_search"
@@ -104,12 +102,10 @@
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:textAllCaps="false"
-                        android:insetTop="0dp"
                         android:minWidth="60dp"
-                        android:insetBottom="0dp"
                         app:cornerRadius="10dp"
                         app:icon="@drawable/ic_filter_list"
-                        app:iconSize="14dp"
+                        app:iconSize="18dp"
                         app:iconGravity="textStart"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
@@ -122,11 +118,9 @@
                         android:textStyle="bold"
                         android:minWidth="65dp"
                         android:textAllCaps="false"
-                        android:insetTop="0dp"
-                        android:insetBottom="0dp"
                         app:cornerRadius="10dp"
                         app:icon="@drawable/ic_sort"
-                        app:iconSize="14dp"
+                        app:iconSize="18dp"
                         app:iconGravity="textStart"
                         style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
 
