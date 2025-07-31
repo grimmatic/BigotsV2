@@ -4,12 +4,15 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.google.android.material.tabs.TabLayoutMediator
+import com.vakifbank.bigotsv2.R
 import com.vakifbank.bigotsv2.databinding.FragmentHomeBinding
 import com.vakifbank.bigotsv2.domain.model.HomeTabConfig
 import com.vakifbank.bigotsv2.ui.adapter.HomeFragmentStateAdapter
@@ -118,10 +121,26 @@ class HomeFragment : Fragment() {
             updateFabState(state.isServiceRunning)
             tvServiceStatus.text = viewModel.getServiceStatusText()
             statusIndicator.setBackgroundResource(viewModel.getStatusIndicatorBackground())
+            updateStatusIconColor(state.isServiceRunning)
         }
 
         /*if (state.isRefreshing) {
         }*/
+    }
+
+    private fun updateStatusIconColor(isServiceRunning: Boolean) {
+        val currentBinding = _binding ?: return
+
+        val statusCard = currentBinding.root.findViewById<LinearLayout>(R.id.statusCardLayout)
+        val statusIcon = statusCard?.findViewById<ImageView>(R.id.statusIcon)
+
+        statusIcon?.let { icon ->
+            if (isServiceRunning) {
+                icon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.success_color)
+            } else {
+                icon.imageTintList = ContextCompat.getColorStateList(requireContext(), R.color.error_color)
+            }
+        }
     }
 
     private fun updateFabState(isServiceRunning: Boolean) {

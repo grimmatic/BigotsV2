@@ -52,4 +52,9 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+
+    <color name="chip_background_default">#F5F5F5</color>
+    <color name="chip_background_selected">#E3F2FD</color>
+    <color name="chip_text_default">#424242</color>
+    <color name="chip_text_selected">#1976D2</color>
 </resources>

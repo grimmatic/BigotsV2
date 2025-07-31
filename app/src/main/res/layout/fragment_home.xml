@@ -13,24 +13,14 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <com.google.android.material.appbar.AppBarLayout
-            android:id="@+id/appBarLayout"
+        <!-- Status and Info Cards -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
-            app:elevation="0dp">
+            android:orientation="vertical"
+            android:paddingTop="16dp">
 
-            <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                android:background="@drawable/toolbar_gradient"
-                app:menu="@menu/main_menu"
-                app:navigationIconTint="@color/white"
-                app:title="Bigots"
-                app:titleTextColor="@color/white"
-                app:titleTextAppearance="@style/ToolbarTitleStyle" />
-
+            <!-- Status Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,6 +31,7 @@
                 app:cardBackgroundColor="@color/white">
 
                 <LinearLayout
+                    android:id="@+id/statusCardLayout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -134,11 +125,12 @@
                         android:gravity="center">
 
                         <ImageView
+                            android:id="@+id/statusIcon"
                             android:layout_width="20dp"
                             android:layout_height="20dp"
                             android:src="@drawable/ic_power_settings_new"
                             android:layout_marginBottom="4dp"
-                            app:tint="@color/success_color" />
+                            app:tint="@color/error_color" />
 
                         <TextView
                             android:layout_width="wrap_content"
@@ -179,6 +171,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- Threshold Setting Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -267,7 +260,7 @@
 
             </com.google.android.material.card.MaterialCardView>
 
-        </com.google.android.material.appbar.AppBarLayout>
+        </LinearLayout>
 
         <!-- Modern TabLayout -->
         <com.google.android.material.card.MaterialCardView

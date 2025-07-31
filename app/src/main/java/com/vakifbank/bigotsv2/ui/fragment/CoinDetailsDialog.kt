@@ -101,6 +101,7 @@ class CoinDetailsDialog : DialogFragment() {
             binding.seekBarVolume.progress = currentSoundLevel
             binding.seekBarVolume.max = 15
 
+            updateVolumePercentage(currentSoundLevel)
             setupExchangeButtons(coin)
         }
     }
@@ -136,6 +137,7 @@ class CoinDetailsDialog : DialogFragment() {
 
         binding.seekBarVolume.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                updateVolumePercentage(progress)
                 playTestSound(progress)
             }
 
@@ -166,6 +168,10 @@ class CoinDetailsDialog : DialogFragment() {
         binding.btnBinanceWallet.setOnClickListener {
             openBinanceWallet()
         }
+    }
+    private fun updateVolumePercentage(volume: Int) {
+        val percentage = (volume * 100) / 15
+        binding.tvVolumePercentage.text = "$percentage%"
     }
 
     private fun playTestSound(volume: Int) {
