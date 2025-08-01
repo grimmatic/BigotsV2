@@ -77,7 +77,7 @@ class BtcturkViewModel @Inject constructor(
 
     private fun filterBtcturkCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.btcturkPrice!! > 0 && abs(coin.btcturkDifference ?: 0.0) >= 0.01
+            coin.btcturkPrice!! > 0 && coin.binancePrice!!>0
         }.sortedByDescending {
             it.btcturkDifference?.let { x -> abs(x) }
         }
@@ -189,20 +189,6 @@ class BtcturkViewModel @Inject constructor(
     fun hideOptionsMenu() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(showOptionsMenu = false)
-        }
-    }
-
-    fun refreshData() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true)
-            repository.fetchAllData()
-            _uiState.value = _uiState.value.copy(isRefreshing = false)
-        }
-    }
-
-    fun updateCoinAlert(coin: CoinData, isActive: Boolean) {
-        viewModelScope.launch {
-            coin.symbol?.let { repository.updateCoinAlertStatus(it, isActive, true) }
         }
     }
 

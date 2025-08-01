@@ -77,7 +77,7 @@ class ParibuViewModel @Inject constructor(
 
     private fun filterParibuCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.paribuPrice!! > 0 && abs(coin.paribuDifference!!) >= 0.1
+            coin.paribuPrice!! > 0&&coin.binancePrice!!>0
         }.sortedByDescending {
             it.paribuDifference?.let { x -> abs(x) }
         }
