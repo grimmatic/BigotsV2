@@ -70,7 +70,6 @@ class ArbitrageService : Service() {
     override fun onCreate() {
         super.onCreate()
         mediaPlayerManager = MediaPlayerManager.getInstance(this)
-        createNotificationChannel()
         startForegroundService()
         startDataCollection()
         startNotificationUpdates()
@@ -92,23 +91,6 @@ class ArbitrageService : Service() {
         mediaPlayerManager.releaseAll()
     }
 
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CryptoArbitrageApplication.NOTIFICATION_CHANNEL_ID,
-                CryptoArbitrageApplication.NOTIFICATION_CHANNEL_NAME,
-                NotificationManager.IMPORTANCE_LOW
-            ).apply {
-                description = "Arbitraj fırsatları bildirimleri"
-                enableLights(false)
-                enableVibration(false)
-                setSound(null, null)
-            }
-
-            val notificationManager = getSystemService(NotificationManager::class.java)
-            notificationManager?.createNotificationChannel(channel)
-        }
-    }
 
     private fun startForegroundService() {
         val notification = createNotification("Arbitraj servisi başlatılıyor...")

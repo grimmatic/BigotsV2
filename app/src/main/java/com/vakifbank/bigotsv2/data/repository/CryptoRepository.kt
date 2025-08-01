@@ -252,6 +252,19 @@ class CryptoRepository @Inject constructor(
                     ?.let { rate -> binanceUsdPrice * rate }
                     ?: Numeric.DEFAULT_PRICE
 
+                val isParibuSupported = paribuData.containsKey(coin.paribuSymbol)
+                val isBtcTurkSupported = btcturkData.containsKey(coin.btcturkSymbol.replace(
+                    oldValue = Strings.UNDERSCORE,
+                    newValue = Numeric.EMPTY
+                ))
+
+                if (isParibuSupported && (! (paribuPrice > 0.0 && binanceTlPriceParibu > 0.0))) {
+                    return@mapNotNull null
+                }
+                if (isBtcTurkSupported && (! (btcturkPrice > 0.0 && binanceTlPriceBtcTurk > 0.0))) {
+                    return@mapNotNull null
+                }
+
                 val paribuDifference =
                     paribuPrice.takeIf { it > Numeric.DEFAULT_PRICE }?.let {
                         ((paribuPrice - binanceTlPriceParibu) * Numeric.PERCENTAGE_MULTIPLIER) / paribuPrice

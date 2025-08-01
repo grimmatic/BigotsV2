@@ -125,25 +125,16 @@ class ParibuViewModel @Inject constructor(
             SortType.PRICE_DESC -> filtered.sortedByDescending { it.paribuPrice ?: 0.0 }
             SortType.PRICE_ASC -> filtered.sortedBy { it.paribuPrice ?: 0.0 }
         }
-        val alertCount = calculateAlertCountFromDisplayedCoins(sortedCoins)
 
         _uiState.value = _uiState.value.copy(
             coinList = sortedCoins,
             filteredCoinCount = sortedCoins.size,
             totalCoinCount = allCoins.size,
             hasActiveFilters = hasActiveFilters(),
-            alertCount = alertCount
 
         )
     }
 
-    private fun calculateAlertCountFromDisplayedCoins(displayedCoins: List<CoinData>): Int {
-        return displayedCoins.count { coin ->
-            val difference = abs(coin.paribuDifference ?: 0.0)
-            val threshold = coin.alertThreshold ?: 2.5
-            difference > threshold
-        }
-    }
 
     private fun hasActiveFilters(): Boolean {
         return _searchQuery.value.isNotEmpty() ||
