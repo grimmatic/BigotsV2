@@ -163,8 +163,6 @@ class ArbitrageService : Service() {
         previousPlayingOpportunities.putAll(currentlyPlayingOpportunities)
         currentlyPlayingOpportunities.clear()
 
-        Log.d("ArbitrageService", "Checking ${opportunities.size} opportunities")
-
         opportunities.forEach { opportunity ->
             opportunity.coin?.let { coin ->
                 val symbol = coin.symbol ?: return@let
@@ -193,11 +191,6 @@ class ArbitrageService : Service() {
 
                 val difference = kotlin.math.abs(opportunity.difference ?: 0.0)
 
-                Log.d(
-                    "ArbitrageService",
-                    "$symbol ($exchange): isActive=$isAlertActive, threshold=$threshold, difference=$difference"
-                )
-
                 if (isAlertActive && difference > threshold) {
                     currentlyPlayingOpportunities[opportunityId] = opportunity
                 }
@@ -214,10 +207,6 @@ class ArbitrageService : Service() {
                 val opportunity = previousPlayingOpportunities[opportunityId]
                 opportunity?.coin?.symbol?.let { symbol ->
                     val soundResource = SoundMapping.getSoundResource(symbol)
-                    Log.d(
-                        "ArbitrageService",
-                        "Stopping sound for $symbol (opportunityId: $opportunityId)"
-                    )
                     mediaPlayerManager.stopSound(soundResource)
                 }
             }

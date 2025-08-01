@@ -147,8 +147,7 @@ class ParibuViewModel @Inject constructor(
 
     private fun hasActiveFilters(): Boolean {
         return _searchQuery.value.isNotEmpty() ||
-                _currentFilterType.value != FilterType.ALL ||
-                _currentSortType.value != SortType.DIFFERENCE_DESC
+                _currentFilterType.value != FilterType.ALL
     }
 
     fun updateSearchQuery(query: String) {
