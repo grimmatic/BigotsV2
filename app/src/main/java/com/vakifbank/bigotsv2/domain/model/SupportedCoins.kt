@@ -54,24 +54,4 @@ enum class SupportedCoins(
     AUDIO("AUDIO", "Audius", "AUDIO_TL", "AUDIOTRY", "AUDIOUSDT"),
     BTC("BTC", "Bitcoin", "BTC_TL", "BTCTRY", "BTCUSDT"),
     ETH("ETH", "Ethereum", "ETH_TL", "ETHTRY", "ETHUSDT");
-
-    //????
-    companion object {
-        fun getAllParibuSymbols(): List<String> = entries.map { it.paribuSymbol }
-
-        fun getAllBtcturkSymbols(): List<String> = entries.map { it.btcturkSymbol }
-
-        fun getAllBinanceSymbols(): List<String> = entries.map { it.binanceSymbol }
-
-        fun getBySymbol(symbol: String): SupportedCoins? = values().find { it.symbol == symbol }
-
-        fun getByParibuSymbol(paribuSymbol: String): SupportedCoins? =
-            values().find { it.paribuSymbol == paribuSymbol }
-
-        fun getByBtcturkSymbol(btcturkSymbol: String): SupportedCoins? =
-            values().find { it.btcturkSymbol == btcturkSymbol }
-
-        fun getByBinanceSymbol(binanceSymbol: String): SupportedCoins? =
-            values().find { it.binanceSymbol == binanceSymbol }
-    }
 }

@@ -1,6 +1,7 @@
 package com.vakifbank.bigotsv2
 
 import android.app.Application
+import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.os.Build
@@ -29,6 +30,8 @@ class CryptoArbitrageApplication : Application() {
                 description = "Arbitraj fırsatları"
                 enableLights(true)
                 enableVibration(true)
+                setShowBadge(true)
+                lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
 
             val notificationManager = getSystemService(NotificationManager::class.java)
