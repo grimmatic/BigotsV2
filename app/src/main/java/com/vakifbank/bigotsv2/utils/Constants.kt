@@ -42,6 +42,7 @@ object Constants {
         const val ALERT_ACTIVE = "_alert_active"
         const val ALERT_ACTIVE_BTC = "_alert_active_btc"
     }
+
     object Strings {
         const val UNDERSCORE = "_"
     }

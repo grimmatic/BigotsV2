@@ -77,7 +77,7 @@ class ParibuViewModel @Inject constructor(
 
     private fun filterParibuCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.paribuPrice!! > 0&&coin.binancePrice!!>0
+            coin.paribuPrice!! > 0 && coin.binancePrice!! > 0
         }.sortedByDescending {
             it.paribuDifference?.let { x -> abs(x) }
         }
@@ -125,13 +125,24 @@ class ParibuViewModel @Inject constructor(
             SortType.PRICE_DESC -> filtered.sortedByDescending { it.paribuPrice ?: 0.0 }
             SortType.PRICE_ASC -> filtered.sortedBy { it.paribuPrice ?: 0.0 }
         }
+        val alertCount = calculateAlertCountFromDisplayedCoins(sortedCoins)
 
         _uiState.value = _uiState.value.copy(
             coinList = sortedCoins,
             filteredCoinCount = sortedCoins.size,
             totalCoinCount = allCoins.size,
-            hasActiveFilters = hasActiveFilters()
+            hasActiveFilters = hasActiveFilters(),
+            alertCount = alertCount
+
         )
+    }
+
+    private fun calculateAlertCountFromDisplayedCoins(displayedCoins: List<CoinData>): Int {
+        return displayedCoins.count { coin ->
+            val difference = abs(coin.paribuDifference ?: 0.0)
+            val threshold = coin.alertThreshold ?: 2.5
+            difference > threshold
+        }
     }
 
     private fun hasActiveFilters(): Boolean {

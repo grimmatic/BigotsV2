@@ -12,9 +12,9 @@ import com.vakifbank.bigotsv2.domain.model.SupportedCoins
 import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
 import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
-import com.vakifbank.bigotsv2.utils.Constants.Numeric
 import com.vakifbank.bigotsv2.utils.Constants.ApiSymbols
 import com.vakifbank.bigotsv2.utils.Constants.Defaults
+import com.vakifbank.bigotsv2.utils.Constants.Numeric
 import com.vakifbank.bigotsv2.utils.Constants.SharedPreferences
 import com.vakifbank.bigotsv2.utils.Constants.SharedPreferencesSuffixes
 import com.vakifbank.bigotsv2.utils.Constants.Strings
@@ -84,8 +84,10 @@ class CryptoRepository @Inject constructor(
         newThreshold: Double,
         isForBtcTurk: Boolean = false
     ) {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
-        val key = if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.THRESHOLD}"
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val key =
+            if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.THRESHOLD}"
         prefs.edit { putFloat(key, newThreshold.toFloat()) }
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -100,7 +102,8 @@ class CryptoRepository @Inject constructor(
     }
 
     fun getGlobalThreshold(): Double {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
         return prefs.getFloat(
             SharedPreferences.GLOBAL_THRESHOLD,
             Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
@@ -108,13 +111,20 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateAllThresholds(newThreshold: Double) {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit {
             putFloat(SharedPreferences.GLOBAL_THRESHOLD, newThreshold.toFloat())
 
             SupportedCoins.entries.forEach { coin ->
-                putFloat("${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD}", newThreshold.toFloat())
-                putFloat("${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}", newThreshold.toFloat())
+                putFloat(
+                    "${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD}",
+                    newThreshold.toFloat()
+                )
+                putFloat(
+                    "${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}",
+                    newThreshold.toFloat()
+                )
             }
         }
 
@@ -128,8 +138,10 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateCoinSoundLevel(coinSymbol: String, soundLevel: Int, isForBtcTurk: Boolean = false) {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
-        val key = if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.SOUND_LEVEL_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.SOUND_LEVEL}"
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val key =
+            if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.SOUND_LEVEL_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.SOUND_LEVEL}"
         prefs.edit { putInt(key, soundLevel) }
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -145,8 +157,10 @@ class CryptoRepository @Inject constructor(
         isActive: Boolean,
         isForBtcTurk: Boolean = false
     ) {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
-        val key = if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}"
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val key =
+            if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}"
         prefs.edit { putBoolean(key, isActive) }
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -212,7 +226,8 @@ class CryptoRepository @Inject constructor(
     ): List<CoinData> {
         val paribuUsdtRate = _usdTryRate.value
         val btcturkUsdtRate = _usdTryRateBtcTurk.value
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
 
         return SupportedCoins.entries.mapNotNull { coin ->
             try {
@@ -260,7 +275,10 @@ class CryptoRepository @Inject constructor(
                     Numeric.DEFAULT_SOUND_LEVEL
                 )
 
-                val savedAlertActive = prefs.getBoolean("${coin.symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}", true)
+                val savedAlertActive = prefs.getBoolean(
+                    "${coin.symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}",
+                    true
+                )
 
                 val currentCoin = _coinDataList.value.find { it.symbol == coin.symbol }
                 val currentThreshold = currentCoin?.alertThreshold ?: savedThresholdParibu
@@ -287,7 +305,8 @@ class CryptoRepository @Inject constructor(
 
     private fun findArbitrageOpportunities(coins: List<CoinData>): List<ArbitrageOpportunity> {
         val opportunities = mutableListOf<ArbitrageOpportunity>()
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
 
         coins.forEach { coin ->
             coin.symbol?.let { symbol ->
@@ -343,7 +362,8 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateAllSoundLevels(level: Int) {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit {
             SupportedCoins.entries.forEach { coin ->
                 putInt("${coin.symbol}${SharedPreferencesSuffixes.SOUND_LEVEL}", level)
@@ -358,7 +378,8 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateRefreshRate(rate: Float) {
-        val prefs = context.getSharedPreferences(SharedPreferences.APP_SETTINGS, Context.MODE_PRIVATE)
+        val prefs =
+            context.getSharedPreferences(SharedPreferences.APP_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit { putFloat(SharedPreferences.REFRESH_RATE, rate) }
     }
 }

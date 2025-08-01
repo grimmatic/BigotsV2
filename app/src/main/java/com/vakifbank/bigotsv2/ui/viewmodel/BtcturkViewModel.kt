@@ -77,7 +77,7 @@ class BtcturkViewModel @Inject constructor(
 
     private fun filterBtcturkCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.btcturkPrice!! > 0 && coin.binancePrice!!>0
+            coin.btcturkPrice!! > 0 && coin.binancePrice!! > 0
         }.sortedByDescending {
             it.btcturkDifference?.let { x -> abs(x) }
         }
@@ -125,13 +125,23 @@ class BtcturkViewModel @Inject constructor(
             SortType.PRICE_DESC -> filtered.sortedByDescending { it.btcturkPrice ?: 0.0 }
             SortType.PRICE_ASC -> filtered.sortedBy { it.btcturkPrice ?: 0.0 }
         }
+        val alertCount = calculateAlertCountFromDisplayedCoins(sortedCoins)
 
         _uiState.value = _uiState.value.copy(
             coinList = sortedCoins,
             filteredCoinCount = sortedCoins.size,
             totalCoinCount = allCoins.size,
-            hasActiveFilters = hasActiveFilters()
+            hasActiveFilters = hasActiveFilters(),
+            alertCount = alertCount
         )
+    }
+
+    private fun calculateAlertCountFromDisplayedCoins(displayedCoins: List<CoinData>): Int {
+        return displayedCoins.count { coin ->
+            val difference = abs(coin.btcturkDifference ?: 0.0)
+            val threshold = coin.alertThreshold ?: 2.5
+            difference > threshold
+        }
     }
 
     private fun hasActiveFilters(): Boolean {
