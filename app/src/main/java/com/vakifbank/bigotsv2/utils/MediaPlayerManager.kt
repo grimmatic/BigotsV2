@@ -79,10 +79,6 @@ class MediaPlayerManager private constructor(private val context: Context) {
         }
     }
 
-    fun updateVolume(soundResource: Int, volume: Float) {
-        volumeLevels[soundResource] = volume
-        mediaPlayers[soundResource]?.setVolume(volume, volume)
-    }
 
     fun stopSound(soundResource: Int) {
         mediaPlayers[soundResource]?.let { player ->
@@ -112,35 +108,6 @@ class MediaPlayerManager private constructor(private val context: Context) {
         volumeLevels.clear()
     }
 
-    fun pauseSound(soundResource: Int) {
-        mediaPlayers[soundResource]?.let { player ->
-            try {
-                if (player.isPlaying) {
-                    player.pause()
-                }
-            } catch (e: Exception) {
-            }
-        }
-    }
-
-    fun resumeSound(soundResource: Int) {
-        mediaPlayers[soundResource]?.let { player ->
-            try {
-                if (!player.isPlaying) {
-                    player.start()
-                }
-            } catch (e: Exception) {
-            }
-        }
-    }
-
-    fun isPlaying(soundResource: Int): Boolean {
-        return try {
-            mediaPlayers[soundResource]?.isPlaying ?: false
-        } catch (e: Exception) {
-            false
-        }
-    }
 
     fun releaseAll() {
         stopAllSounds()

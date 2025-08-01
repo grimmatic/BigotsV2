@@ -1,6 +1,7 @@
 package com.vakifbank.bigotsv2.ui.viewmodel
 
 import android.content.Context
+import androidx.core.content.edit
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.vakifbank.bigotsv2.data.repository.CryptoRepository
@@ -12,7 +13,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import androidx.core.content.edit
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(

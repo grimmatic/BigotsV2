@@ -11,7 +11,8 @@ object ApiClient {
     private const val PARIBU_BASE_URL = "https://www.paribu.com/"
     private const val BINANCE_BASE_URL = "https://www.binance.com/"
     private const val BTCTURK_BASE_URL = "https://api.btcturk.com/"
-//constant dosyana ekleyebilir miisnin
+
+    //constant dosyana ekleyebilir miisnin
     private fun createOkHttpClient(): OkHttpClient {
         val logging = HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BODY

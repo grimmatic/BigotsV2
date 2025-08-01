@@ -59,7 +59,6 @@ class BtcturkViewModel @Inject constructor(
                     isLoading = false
                 )
 
-                // Apply current filters
                 applyFiltersAndSort()
             }.collect { }
         }
@@ -104,16 +103,23 @@ class BtcturkViewModel @Inject constructor(
                 val threshold = coin.alertThreshold ?: 2.5
                 difference > threshold
             }
+
             FilterType.POSITIVE_ONLY -> filtered.filter { coin ->
                 (coin.btcturkDifference ?: 0.0) > 0
             }
+
             FilterType.NEGATIVE_ONLY -> filtered.filter { coin ->
                 (coin.btcturkDifference ?: 0.0) < 0
             }
         }
 
         val sortedCoins = when (_currentSortType.value) {
-            SortType.DIFFERENCE_DESC -> filtered.sortedByDescending { abs(it.btcturkDifference ?: 0.0) }
+            SortType.DIFFERENCE_DESC -> filtered.sortedByDescending {
+                abs(
+                    it.btcturkDifference ?: 0.0
+                )
+            }
+
             SortType.DIFFERENCE_ASC -> filtered.sortedBy { abs(it.btcturkDifference ?: 0.0) }
             SortType.NAME_ASC -> filtered.sortedBy { it.symbol }
             SortType.NAME_DESC -> filtered.sortedByDescending { it.symbol }
@@ -270,6 +276,7 @@ class BtcturkViewModel @Inject constructor(
                 if (isPositive) com.vakifbank.bigotsv2.R.color.success_color
                 else com.vakifbank.bigotsv2.R.color.error_color
             }
+
             else -> com.vakifbank.bigotsv2.R.color.text_secondary
         }
     }

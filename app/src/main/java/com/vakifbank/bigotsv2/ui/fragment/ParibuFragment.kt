@@ -34,6 +34,8 @@ class ParibuFragment : Fragment() {
 
     private lateinit var coinAdapter: CoinAdapter
 
+    private var previousSelectedCoin: CoinData? = null
+    private var previousShowOptionsMenu: Boolean = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -101,11 +103,21 @@ class ParibuFragment : Fragment() {
             paribuViewModel.uiState.collect { state ->
                 updateCoinList(state.coinList)
                 updateActiveAlertsCount(state.alertCount)
-                updateResultsInfo(state.filteredCoinCount, state.totalCoinCount, state.hasActiveFilters)
+                updateResultsInfo(
+                    state.filteredCoinCount,
+                    state.totalCoinCount,
+                    state.hasActiveFilters
+                )
                 updateEmptyState(state.coinList, state.isLoading, state.hasActiveFilters)
 
-                // Handle dialog states
-                handleDialogStates(state)
+                // Dialog handling - BTCTurk gibi basit mantık
+                state.selectedCoin?.let { coin ->
+                    if (state.showOptionsMenu) {
+                        showCoinOptionsMenu(coin)
+                    } else {
+                        showCoinDetailDialog(coin)
+                    }
+                }
             }
         }
 
@@ -163,7 +175,12 @@ class ParibuFragment : Fragment() {
                 .start()
 
             searchButton.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_clear)
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary_color_light))
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.primary_color_light
+                )
+            )
 
             binding.etSearch.requestFocus()
             scrollToTabSection()
@@ -177,7 +194,12 @@ class ParibuFragment : Fragment() {
                 .start()
 
             searchButton.icon = ContextCompat.getDrawable(requireContext(), R.drawable.ic_search)
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    android.R.color.transparent
+                )
+            )
         }
     }
 
@@ -187,11 +209,23 @@ class ParibuFragment : Fragment() {
         val searchButton = binding.btnSearchToggle
 
         if (hasActiveFilters && !isExpanded) {
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), R.color.primary_color_light))
-            searchButton.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.primary_color)
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    R.color.primary_color_light
+                )
+            )
+            searchButton.strokeColor =
+                ContextCompat.getColorStateList(requireContext(), R.color.primary_color)
         } else if (!isExpanded) {
-            searchButton.setBackgroundColor(ContextCompat.getColor(requireContext(), android.R.color.transparent))
-            searchButton.strokeColor = ContextCompat.getColorStateList(requireContext(), R.color.text_secondary)
+            searchButton.setBackgroundColor(
+                ContextCompat.getColor(
+                    requireContext(),
+                    android.R.color.transparent
+                )
+            )
+            searchButton.strokeColor =
+                ContextCompat.getColorStateList(requireContext(), R.color.text_secondary)
         }
     }
 
@@ -204,16 +238,22 @@ class ParibuFragment : Fragment() {
         }
     }
 
-    private fun updateEmptyState(coinList: List<CoinData>, isLoading: Boolean, hasFilters: Boolean) {
+    private fun updateEmptyState(
+        coinList: List<CoinData>,
+        isLoading: Boolean,
+        hasFilters: Boolean
+    ) {
         when {
             coinList.isEmpty() && !isLoading && !hasFilters -> {
                 binding.layoutEmptyState.visibility = View.VISIBLE
                 binding.recyclerViewCoins.visibility = View.GONE
                 binding.ivEmptyStateIcon.setImageResource(R.drawable.ic_search_off)
                 binding.tvEmptyStateTitle.text = "Henüz veri yok"
-                binding.tvEmptyStateMessage.text = "Servisi başlatın ve verilerin gelmesini bekleyin"
+                binding.tvEmptyStateMessage.text =
+                    "Servisi başlatın ve verilerin gelmesini bekleyin"
                 binding.btnRetry.visibility = View.VISIBLE
             }
+
             coinList.isEmpty() && hasFilters -> {
                 binding.layoutEmptyState.visibility = View.VISIBLE
                 binding.recyclerViewCoins.visibility = View.GONE
@@ -222,6 +262,7 @@ class ParibuFragment : Fragment() {
                 binding.tvEmptyStateMessage.text = "Arama kriterlerinizi değiştirmeyi deneyin"
                 binding.btnRetry.visibility = View.GONE
             }
+
             else -> {
                 binding.layoutEmptyState.visibility = View.GONE
                 binding.recyclerViewCoins.visibility = View.VISIBLE
@@ -229,15 +270,6 @@ class ParibuFragment : Fragment() {
         }
     }
 
-    private fun handleDialogStates(state: com.vakifbank.bigotsv2.ui.viewmodel.ParibuUiState) {
-        state.selectedCoin?.let { coin ->
-            if (state.showOptionsMenu) {
-                showCoinOptionsMenu(coin)
-            } else {
-                showCoinDetailDialog(coin)
-            }
-        }
-    }
 
     private fun scrollToTabSection() {
         try {
@@ -328,10 +360,25 @@ class ParibuFragment : Fragment() {
         }
 
         dialog.show(childFragmentManager, "CoinDetailsDialog")
+        paribuViewModel.hideCoinDetailDialog()
     }
 
     private fun showCoinOptionsMenu(coin: CoinData) {
-        showCoinDetailDialog(coin)
+        val dialog = CoinDetailsDialog.newInstance(coin, isFromBtcTurk = false)
+
+        dialog.setOnThresholdChangedListener { threshold ->
+            paribuViewModel.updateCoinThreshold(coin, threshold)
+        }
+
+        dialog.setOnSoundLevelChangedListener { soundLevel ->
+            paribuViewModel.updateCoinSoundLevel(coin, soundLevel)
+        }
+
+        dialog.setOnDialogDismissedListener {
+            paribuViewModel.hideOptionsMenu()
+        }
+
+        dialog.show(childFragmentManager, "CoinDetailsDialog")
         paribuViewModel.hideOptionsMenu()
     }
 
