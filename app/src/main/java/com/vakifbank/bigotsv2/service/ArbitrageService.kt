@@ -60,7 +60,6 @@ class ArbitrageService : Service() {
     @Inject
     lateinit var repository: CryptoRepository
     private var updateJob: Job? = null
-    private var notificationJob: Job? = null
     private var soundPlayJob: Job? = null
 
     private lateinit var mediaPlayerManager: MediaPlayerManager
@@ -75,7 +74,6 @@ class ArbitrageService : Service() {
         mediaPlayerManager = MediaPlayerManager.getInstance(this)
         startForegroundService()
         startDataCollection()
-        startNotificationUpdates()
         startContinuousSoundPlayback()
     }
 
@@ -88,14 +86,16 @@ class ArbitrageService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         updateJob?.cancel()
-        notificationJob?.cancel()
         soundPlayJob?.cancel()
         serviceScope.cancel()
         mediaPlayerManager.releaseAll()
+        
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager?.cancel(NOTIFICATION_ID)
     }
 
     private fun startForegroundService() {
-        val notification = createNotification("Arbitraj servisi başlatılıyor...")
+        val notification = createNotification()
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
@@ -119,15 +119,6 @@ class ArbitrageService : Service() {
                 } catch (e: Exception) {
                     delay(5000)
                 }
-            }
-        }
-    }
-
-    private fun startNotificationUpdates() {
-        notificationJob = serviceScope.launch {
-            repository.arbitrageOpportunities.collect { opportunities ->
-                updateNotification(opportunities)
-                updateCurrentOpportunities(opportunities)
             }
         }
     }
@@ -221,7 +212,7 @@ class ArbitrageService : Service() {
         }
     }
 
-    private fun createNotification(content: String): Notification {
+    private fun createNotification(): Notification {
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
@@ -233,7 +224,7 @@ class ArbitrageService : Service() {
 
         return NotificationCompat.Builder(this, CryptoArbitrageApplication.NOTIFICATION_CHANNEL_ID)
             .setContentTitle("Bigots - Arbitraj Takibi")
-            .setContentText(content)
+            .setContentText("Arbitraj servisi başlatıldı")
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             .setContentIntent(pendingIntent)
             .setOngoing(true)
@@ -242,70 +233,9 @@ class ArbitrageService : Service() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setSilent(true)
             .setOnlyAlertOnce(true)
-            .setStyle(NotificationCompat.BigTextStyle()
-                .bigText(content))
+            .setUsesChronometer(true)
+            .setChronometerCountDown(false)
+            .setWhen(serviceStartTime)
             .build()
-    }
-
-    private fun updateNotification(opportunities: List<ArbitrageOpportunity>) {
-        val content = if (opportunities.isEmpty()) {
-            val uptime = getServiceUptime()
-            "Arbitraj fırsatı bekleniyor...\n\n⏱️ Aktif süre: $uptime"
-        } else {
-            val activeCount = currentlyPlayingOpportunities.size
-            val uptime = getServiceUptime()
-            val sortedOpportunities = opportunities
-                .sortedByDescending { kotlin.math.abs(it.difference ?: 0.0) }
-                .take(10)
-
-            buildString {
-                append("🚨 $activeCount aktif alarm | ⏱️ Aktif süre: $uptime\n\n")
-
-                if (sortedOpportunities.isNotEmpty()) {
-                    append("📊 ALARM ÇALAN COİNLER:\n")
-                    append("─".repeat(30))
-                    append("\n\n")
-
-                    sortedOpportunities.forEachIndexed { index, opportunity ->
-                        val exchangeName = when (opportunity.exchange) {
-                            Exchange.PARIBU -> "📗 Paribu"
-                            Exchange.BTCTURK -> "📘 BTCTurk"
-                            else -> "📙 Unknown"
-                        }
-
-                        val sign = if (opportunity.isPositive == true) "+" else ""
-                        val percentage = opportunity.difference ?: 0.0
-
-                        append("${index + 1}. ${opportunity.coin?.symbol}\n")
-                        append("   $exchangeName: $sign%.2f%%\n".format(percentage))
-
-                        if (index < sortedOpportunities.size - 1) {
-                            append("\n")
-                        }
-                    }
-                }
-            }
-        }
-
-        val notification = createNotification(content)
-        val notificationManager = getSystemService(NotificationManager::class.java)
-        notificationManager?.notify(NOTIFICATION_ID, notification)
-    }
-
-    private fun getServiceUptime(): String {
-        val currentTime = System.currentTimeMillis()
-        val uptimeMillis = currentTime - serviceStartTime
-
-        val seconds = (uptimeMillis / 1000) % 60
-        val minutes = (uptimeMillis / (1000 * 60)) % 60
-        val hours = (uptimeMillis / (1000 * 60 * 60)) % 24
-        val days = uptimeMillis / (1000 * 60 * 60 * 24)
-
-        return when {
-            days > 0 -> "${days}g ${hours}s ${minutes}d"
-            hours > 0 -> "${hours}s ${minutes}d ${seconds}sn"
-            minutes > 0 -> "${minutes}d ${seconds}sn"
-            else -> "${seconds}sn"
-        }
     }
 }
