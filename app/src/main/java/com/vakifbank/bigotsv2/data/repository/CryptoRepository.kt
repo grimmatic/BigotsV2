@@ -13,7 +13,6 @@ import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
 import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
 import com.vakifbank.bigotsv2.utils.Constants.ApiSymbols
-import com.vakifbank.bigotsv2.utils.Constants.Defaults
 import com.vakifbank.bigotsv2.utils.Constants.Numeric
 import com.vakifbank.bigotsv2.utils.Constants.SharedPreferences
 import com.vakifbank.bigotsv2.utils.Constants.SharedPreferencesSuffixes
@@ -152,28 +151,6 @@ class CryptoRepository @Inject constructor(
         _coinDataList.value = updatedList
     }
 
-    fun updateCoinAlertStatus(
-        coinSymbol: String,
-        isActive: Boolean,
-        isForBtcTurk: Boolean = false
-    ) {
-        val prefs =
-            context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
-        val key =
-            if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}"
-        prefs.edit { putBoolean(key, isActive) }
-
-        val updatedList = _coinDataList.value.map { coin ->
-            if (coin.symbol == coinSymbol) {
-                coin.copy(isAlertActive = isActive)
-            } else coin
-        }
-        _coinDataList.value = updatedList
-
-        val opportunities = findArbitrageOpportunities(updatedList)
-        _arbitrageOpportunities.value = opportunities
-    }
-
     private suspend fun fetchParibuData(): Map<String, ParibuTicker> {
         return try {
             val response = paribuApi.getTickers()
@@ -277,7 +254,6 @@ class CryptoRepository @Inject constructor(
                         ((price - binanceTlPriceBtcTurk) * Numeric.PERCENTAGE_MULTIPLIER) / price
                     } ?: Numeric.DEFAULT_DIFFERENCE
 
-                //%d ile kullanıp string dosyasına alabilir misin
                 val savedThresholdParibu = prefs.getFloat(
                     "${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD}",
                     Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
@@ -286,11 +262,6 @@ class CryptoRepository @Inject constructor(
                 val savedSoundLevel = prefs.getInt(
                     "${coin.symbol}${SharedPreferencesSuffixes.SOUND_LEVEL}",
                     Numeric.DEFAULT_SOUND_LEVEL
-                )
-
-                val savedAlertActive = prefs.getBoolean(
-                    "${coin.symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}",
-                    true
                 )
 
                 val currentCoin = _coinDataList.value.find { it.symbol == coin.symbol }
@@ -307,8 +278,7 @@ class CryptoRepository @Inject constructor(
                     paribuDifference = paribuDifference,
                     btcturkDifference = btcturkDifference,
                     alertThreshold = currentThreshold,
-                    soundLevel = currentCoin?.soundLevel ?: savedSoundLevel,
-                    isAlertActive = currentCoin?.isAlertActive ?: savedAlertActive
+                    soundLevel = currentCoin?.soundLevel ?: savedSoundLevel
                 )
             } catch (e: Exception) {
                 null
@@ -329,12 +299,8 @@ class CryptoRepository @Inject constructor(
                         coin.alertThreshold?.toFloat()
                             ?: Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
                     ).toDouble()
-                    val isAlertActive = prefs.getBoolean(
-                        "${symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}",
-                        coin.isAlertActive ?: Defaults.ALERT_ACTIVE
-                    )
 
-                    if (isAlertActive && kotlin.math.abs(difference) > threshold) {
+                    if (kotlin.math.abs(difference) > threshold) {
                         opportunities.add(
                             ArbitrageOpportunity(
                                 coin = coin,
@@ -352,12 +318,8 @@ class CryptoRepository @Inject constructor(
                         coin.alertThreshold?.toFloat()
                             ?: Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
                     ).toDouble()
-                    val isAlertActive = prefs.getBoolean(
-                        "${symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE_BTC}",
-                        coin.isAlertActive ?: Defaults.ALERT_ACTIVE
-                    )
 
-                    if (isAlertActive && kotlin.math.abs(difference) > threshold) {
+                    if (kotlin.math.abs(difference) > threshold) {
                         opportunities.add(
                             ArbitrageOpportunity(
                                 coin = coin,

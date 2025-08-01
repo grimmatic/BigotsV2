@@ -31,12 +31,6 @@ enum class HomeTabConfig(
     );
 
     companion object {
-        fun getAllTabs(): List<HomeTabConfig> = values().toList()
-
-        fun getTabTitles(): List<String> = values().map { it.title }
-
-        fun getTabIcons(): List<Int> = values().map { it.iconRes }
-
         fun getFragments(): List<Fragment> = values().map { it.fragmentFactory() }
     }
 }

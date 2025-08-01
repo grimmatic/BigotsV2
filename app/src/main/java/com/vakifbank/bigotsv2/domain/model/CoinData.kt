@@ -16,5 +16,4 @@ data class CoinData(
     val btcturkDifference: Double? = 0.0,
     val alertThreshold: Double? = 2.5,
     val soundLevel: Int? = 15,
-    val isAlertActive: Boolean? = false
 ) : Parcelable

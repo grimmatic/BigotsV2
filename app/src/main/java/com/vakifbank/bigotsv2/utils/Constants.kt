@@ -23,7 +23,6 @@ object Constants {
     }
 
     object Defaults {
-        const val ALERT_ACTIVE = false
         const val IS_POSITIVE = false
     }
 
@@ -39,8 +38,7 @@ object Constants {
         const val THRESHOLD_BTC = "_threshold_btc"
         const val SOUND_LEVEL = "_sound_level"
         const val SOUND_LEVEL_BTC = "_sound_level_btc"
-        const val ALERT_ACTIVE = "_alert_active"
-        const val ALERT_ACTIVE_BTC = "_alert_active_btc"
+
     }
 
     object Strings {

@@ -67,8 +67,11 @@ class ArbitrageService : Service() {
     private val currentlyPlayingOpportunities = mutableMapOf<String, ArbitrageOpportunity>()
     private val previousPlayingOpportunities = mutableMapOf<String, ArbitrageOpportunity>()
 
+    private var serviceStartTime: Long = 0L
+
     override fun onCreate() {
         super.onCreate()
+        serviceStartTime = System.currentTimeMillis()
         mediaPlayerManager = MediaPlayerManager.getInstance(this)
         startForegroundService()
         startDataCollection()
@@ -90,7 +93,6 @@ class ArbitrageService : Service() {
         serviceScope.cancel()
         mediaPlayerManager.releaseAll()
     }
-
 
     private fun startForegroundService() {
         val notification = createNotification("Arbitraj servisi başlatılıyor...")
@@ -151,12 +153,6 @@ class ArbitrageService : Service() {
                 val exchange = opportunity.exchange?.name?.lowercase() ?: ""
                 val opportunityId = "${symbol}_$exchange"
 
-                val isAlertActive = if (opportunity.exchange == Exchange.BTCTURK) {
-                    prefs.getBoolean("${symbol}_alert_active_btc", coin.isAlertActive ?: false)
-                } else {
-                    prefs.getBoolean("${symbol}_alert_active", coin.isAlertActive ?: false)
-                }
-
                 val threshold = if (opportunity.exchange == Exchange.BTCTURK) {
                     prefs.getFloat(
                         "${symbol}_threshold_btc",
@@ -173,12 +169,11 @@ class ArbitrageService : Service() {
 
                 val difference = kotlin.math.abs(opportunity.difference ?: 0.0)
 
-                if (isAlertActive && difference > threshold) {
+                if (difference > threshold) {
                     currentlyPlayingOpportunities[opportunityId] = opportunity
                 }
             }
         }
-
 
         stopInactiveSounds()
     }
@@ -203,7 +198,6 @@ class ArbitrageService : Service() {
 
         val prefs = getSharedPreferences("coin_settings", MODE_PRIVATE)
 
-
         currentlyPlayingOpportunities.values.forEach { opportunity ->
             opportunity.coin?.let { coin ->
                 val symbol = coin.symbol ?: return@let
@@ -214,7 +208,6 @@ class ArbitrageService : Service() {
                 } else {
                     prefs.getInt("${symbol}_sound_level", coin.soundLevel ?: 15)
                 }
-
 
                 if (soundLevel > 0) {
                     val soundResource = SoundMapping.getSoundResource(symbol)
@@ -249,29 +242,47 @@ class ArbitrageService : Service() {
             .setCategory(NotificationCompat.CATEGORY_SERVICE)
             .setSilent(true)
             .setOnlyAlertOnce(true)
+            .setStyle(NotificationCompat.BigTextStyle()
+                .bigText(content))
             .build()
     }
 
     private fun updateNotification(opportunities: List<ArbitrageOpportunity>) {
         val content = if (opportunities.isEmpty()) {
-            "Arbitraj fırsatı bekleniyor..."
+            val uptime = getServiceUptime()
+            "Arbitraj fırsatı bekleniyor...\n\n⏱️ Aktif süre: $uptime"
         } else {
             val activeCount = currentlyPlayingOpportunities.size
-            val top3 = opportunities.take(3)
+            val uptime = getServiceUptime()
+            val sortedOpportunities = opportunities
+                .sortedByDescending { kotlin.math.abs(it.difference ?: 0.0) }
+                .take(10)
+
             buildString {
-                append("$activeCount aktif alarm | ")
-                top3.forEachIndexed { index, opportunity ->
-                    val exchangeName = when (opportunity.exchange) {
-                        Exchange.PARIBU -> Constants.ExchangeNames.PARIBU
-                        Exchange.BTCTURK -> Constants.ExchangeNames.BTCTURK
-                        else -> "Unknown"
+                append("🚨 $activeCount aktif alarm | ⏱️ Aktif süre: $uptime\n\n")
+
+                if (sortedOpportunities.isNotEmpty()) {
+                    append("📊 ALARM ÇALAN COİNLER:\n")
+                    append("─".repeat(30))
+                    append("\n\n")
+
+                    sortedOpportunities.forEachIndexed { index, opportunity ->
+                        val exchangeName = when (opportunity.exchange) {
+                            Exchange.PARIBU -> "📗 Paribu"
+                            Exchange.BTCTURK -> "📘 BTCTurk"
+                            else -> "📙 Unknown"
+                        }
+
+                        val sign = if (opportunity.isPositive == true) "+" else ""
+                        val percentage = opportunity.difference ?: 0.0
+
+                        append("${index + 1}. ${opportunity.coin?.symbol}\n")
+                        append("   $exchangeName: $sign%.2f%%\n".format(percentage))
+
+                        if (index < sortedOpportunities.size - 1) {
+                            append("\n")
+                        }
                     }
-
-                    val sign = if (opportunity.isPositive == true) "+" else ""
-                    append("${opportunity.coin?.symbol} ")
-                    append("($exchangeName): $sign%.2f%%".format(opportunity.difference))
-
-                    if (index < top3.size - 1) append(" | ")
                 }
             }
         }
@@ -279,5 +290,22 @@ class ArbitrageService : Service() {
         val notification = createNotification(content)
         val notificationManager = getSystemService(NotificationManager::class.java)
         notificationManager?.notify(NOTIFICATION_ID, notification)
+    }
+
+    private fun getServiceUptime(): String {
+        val currentTime = System.currentTimeMillis()
+        val uptimeMillis = currentTime - serviceStartTime
+
+        val seconds = (uptimeMillis / 1000) % 60
+        val minutes = (uptimeMillis / (1000 * 60)) % 60
+        val hours = (uptimeMillis / (1000 * 60 * 60)) % 24
+        val days = uptimeMillis / (1000 * 60 * 60 * 24)
+
+        return when {
+            days > 0 -> "${days}g ${hours}s ${minutes}d"
+            hours > 0 -> "${hours}s ${minutes}d ${seconds}sn"
+            minutes > 0 -> "${minutes}d ${seconds}sn"
+            else -> "${seconds}sn"
+        }
     }
 }

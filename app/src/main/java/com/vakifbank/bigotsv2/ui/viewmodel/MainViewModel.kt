@@ -93,7 +93,6 @@ class MainViewModel @Inject constructor(
         } ?: 0.0
     }
 
-    // Service management
     fun toggleService(context: Context) {
         viewModelScope.launch {
             if (_uiState.value.isServiceRunning) {
@@ -104,7 +103,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // Global settings
     fun setAllThresholds(threshold: Double) {
         viewModelScope.launch {
             repository.updateAllThresholds(threshold)
@@ -112,19 +110,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun updateAllSoundLevels(level: Int) {
-        viewModelScope.launch {
-            repository.updateAllSoundLevels(level)
-        }
-    }
-
-    fun updateRefreshRate(rate: Float) {
-        viewModelScope.launch {
-            repository.updateRefreshRate(rate)
-        }
-    }
-
-    // UI helper methods
     fun getFormattedUsdTryRate(): String {
         return "₺${String.format("%.3f", _uiState.value.usdTryRate)}"
     }
@@ -145,19 +130,11 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // Data refresh
     fun refreshData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
             repository.fetchAllData()
             _uiState.value = _uiState.value.copy(isRefreshing = false)
-        }
-    }
-
-    // Individual coin settings (called from fragments through their ViewModels)
-    fun updateThreshold(coinSymbol: String, threshold: Double, isForBtcTurk: Boolean = false) {
-        viewModelScope.launch {
-            repository.updateCoinThreshold(coinSymbol, threshold, isForBtcTurk)
         }
     }
 }
