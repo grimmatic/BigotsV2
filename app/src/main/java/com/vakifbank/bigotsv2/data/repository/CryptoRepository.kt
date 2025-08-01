@@ -13,7 +13,12 @@ import com.vakifbank.bigotsv2.domain.model.SupportedCoins
 import com.vakifbank.bigotsv2.domain.model.binance.BinanceTickerResponse
 import com.vakifbank.bigotsv2.domain.model.btcturk.BtcTurkTicker
 import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
-import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.utils.Constants.Numeric
+import com.vakifbank.bigotsv2.utils.Constants.ApiSymbols
+import com.vakifbank.bigotsv2.utils.Constants.Defaults
+import com.vakifbank.bigotsv2.utils.Constants.SharedPreferences
+import com.vakifbank.bigotsv2.utils.Constants.SharedPreferencesSuffixes
+import com.vakifbank.bigotsv2.utils.Constants.Strings
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -38,10 +43,10 @@ class CryptoRepository @Inject constructor(
     val arbitrageOpportunities: Flow<List<ArbitrageOpportunity>> =
         _arbitrageOpportunities.asStateFlow()
 
-    private val _usdTryRate = MutableStateFlow(Constants.Numeric.DEFAULT_PRICE)
+    private val _usdTryRate = MutableStateFlow(Numeric.DEFAULT_PRICE)
     val usdTryRate: Flow<Double> = _usdTryRate.asStateFlow()
 
-    private val _usdTryRateBtcTurk = MutableStateFlow(Constants.Numeric.DEFAULT_PRICE)
+    private val _usdTryRateBtcTurk = MutableStateFlow(Numeric.DEFAULT_PRICE)
     val usdTryRateBtcTurk: Flow<Double> = _usdTryRateBtcTurk.asStateFlow()
 
     suspend fun fetchAllData() {
@@ -55,13 +60,13 @@ class CryptoRepository @Inject constructor(
                 val binanceData = binanceDeferred.await()
                 val btcturkData = btcturkDeferred.await()
 
-                paribuData[Constants.ApiSymbols.USDT_TL]?.let { usdtTicker ->
-                    val usdtRate = usdtTicker.lowestAsk ?: Constants.Numeric.DEFAULT_PRICE
+                paribuData[ApiSymbols.USDT_TL]?.let { usdtTicker ->
+                    val usdtRate = usdtTicker.lowestAsk ?: Numeric.DEFAULT_PRICE
                     _usdTryRate.value = usdtRate
                 }
 
-                btcturkData["USDTTRY"]?.let { usdtTicker ->
-                    val usdtRate = usdtTicker.ask ?: Constants.Numeric.DEFAULT_PRICE
+                btcturkData[ApiSymbols.USDT_TRY]?.let { usdtTicker ->
+                    val usdtRate = usdtTicker.ask ?: Numeric.DEFAULT_PRICE
                     _usdTryRateBtcTurk.value = usdtRate
                 }
 
@@ -72,7 +77,6 @@ class CryptoRepository @Inject constructor(
                 _arbitrageOpportunities.value = opportunities
             }
         } catch (e: Exception) {
-            Log.e("CryptoRepository", "Error fetching data", e)
         }
     }
 
@@ -81,8 +85,8 @@ class CryptoRepository @Inject constructor(
         newThreshold: Double,
         isForBtcTurk: Boolean = false
     ) {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        val key = if (isForBtcTurk) "${coinSymbol}_threshold_btc" else "${coinSymbol}_threshold"
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val key = if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.THRESHOLD}"
         prefs.edit { putFloat(key, newThreshold.toFloat()) }
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -97,27 +101,26 @@ class CryptoRepository @Inject constructor(
     }
 
     fun saveGlobalThreshold(threshold: Double) {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        prefs.edit { putFloat("global_threshold", threshold.toFloat()) }
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        prefs.edit { putFloat(SharedPreferences.GLOBAL_THRESHOLD, threshold.toFloat()) }
     }
 
     fun getGlobalThreshold(): Double {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
         return prefs.getFloat(
-            "global_threshold",
-            Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+            SharedPreferences.GLOBAL_THRESHOLD,
+            Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
         ).toDouble()
     }
 
     fun updateAllThresholds(newThreshold: Double) {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit {
-            putFloat("global_threshold", newThreshold.toFloat())
-
+            putFloat(SharedPreferences.GLOBAL_THRESHOLD, newThreshold.toFloat())
 
             SupportedCoins.entries.forEach { coin ->
-                putFloat("${coin.symbol}_threshold", newThreshold.toFloat())
-                putFloat("${coin.symbol}_threshold_btc", newThreshold.toFloat())
+                putFloat("${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD}", newThreshold.toFloat())
+                putFloat("${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}", newThreshold.toFloat())
             }
         }
 
@@ -131,8 +134,8 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateCoinSoundLevel(coinSymbol: String, soundLevel: Int, isForBtcTurk: Boolean = false) {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        val key = if (isForBtcTurk) "${coinSymbol}_sound_level_btc" else "${coinSymbol}_sound_level"
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val key = if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.SOUND_LEVEL_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.SOUND_LEVEL}"
         prefs.edit { putInt(key, soundLevel) }
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -148,9 +151,8 @@ class CryptoRepository @Inject constructor(
         isActive: Boolean,
         isForBtcTurk: Boolean = false
     ) {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        val key =
-            if (isForBtcTurk) "${coinSymbol}_alert_active_btc" else "${coinSymbol}_alert_active"
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
+        val key = if (isForBtcTurk) "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE_BTC}" else "${coinSymbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}"
         prefs.edit { putBoolean(key, isActive) }
 
         val updatedList = _coinDataList.value.map { coin ->
@@ -198,7 +200,7 @@ class CryptoRepository @Inject constructor(
             if (response.isSuccessful) {
                 val btcturkResponse = response.body()
                 val data = btcturkResponse?.data?.associateBy {
-                    it.pair?.replace("_", "")
+                    it.pair?.replace(Strings.UNDERSCORE, Numeric.EMPTY)
                 } ?: emptyMap()
                 data
             } else {
@@ -216,63 +218,55 @@ class CryptoRepository @Inject constructor(
     ): List<CoinData> {
         val paribuUsdtRate = _usdTryRate.value
         val btcturkUsdtRate = _usdTryRateBtcTurk.value
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
 
         return SupportedCoins.entries.mapNotNull { coin ->
             try {
 
-                //scope fonksiyonları kullanabiliriz?
                 val paribuPrice = paribuData[coin.paribuSymbol]?.highestBid
-                    ?: Constants.Numeric.DEFAULT_PRICE
+                    ?: Numeric.DEFAULT_PRICE
 
                 val binanceUsdPrice = binanceData[coin.binanceSymbol]?.askPrice?.toDoubleOrNull()
-                    ?: Constants.Numeric.DEFAULT_PRICE
+                    ?: Numeric.DEFAULT_PRICE
 
-                val binanceTlPriceParibu = if (paribuUsdtRate > Constants.Numeric.DEFAULT_PRICE) {
-                    binanceUsdPrice * paribuUsdtRate
-                } else {
-                    Constants.Numeric.DEFAULT_PRICE
-                }
+                val binanceTlPriceParibu = paribuUsdtRate.takeIf { it > Numeric.DEFAULT_PRICE }
+                    ?.let { rate -> binanceUsdPrice * rate }
+                    ?: Numeric.DEFAULT_PRICE
 
-                //"-" ile kullanabiliriz
                 val btcturkPrice = btcturkData[coin.btcturkSymbol.replace(
-                    oldValue = "_",
-                    newValue = Constants.Numeric.EMPTY
+                    oldValue = Strings.UNDERSCORE,
+                    newValue = Numeric.EMPTY
                 )]?.bid
-                    ?: Constants.Numeric.DEFAULT_PRICE
+                    ?: Numeric.DEFAULT_PRICE
 
-                val binanceTlPriceBtcTurk = if (btcturkUsdtRate > Constants.Numeric.DEFAULT_PRICE) {
-                    binanceUsdPrice * btcturkUsdtRate
-                } else {
-                    Constants.Numeric.DEFAULT_PRICE
-                }
+                val binanceTlPriceBtcTurk = btcturkUsdtRate.takeIf { it > Numeric.DEFAULT_PRICE }
+                    ?.let { rate -> binanceUsdPrice * rate }
+                    ?: Numeric.DEFAULT_PRICE
 
                 val paribuDifference =
-                    paribuPrice.takeIf { it > Constants.Numeric.DEFAULT_PRICE }?.let {
-                        ((paribuPrice - binanceTlPriceParibu) * Constants.Numeric.PERCENTAGE_MULTIPLIER) / paribuPrice
+                    paribuPrice.takeIf { it > Numeric.DEFAULT_PRICE }?.let {
+                        ((paribuPrice - binanceTlPriceParibu) * Numeric.PERCENTAGE_MULTIPLIER) / paribuPrice
                     } ?: run {
-                        Constants.Numeric.DEFAULT_DIFFERENCE
+                        Numeric.DEFAULT_DIFFERENCE
                     }
 
-                val btcturkDifference = if (btcturkPrice > Constants.Numeric.DEFAULT_PRICE) {
-                    ((btcturkPrice - binanceTlPriceBtcTurk) * Constants.Numeric.PERCENTAGE_MULTIPLIER) / btcturkPrice
-                } else {
-                    Constants.Numeric.DEFAULT_DIFFERENCE
-                }
+                val btcturkDifference = btcturkPrice.takeIf { it > Numeric.DEFAULT_PRICE }
+                    ?.let { price ->
+                        ((price - binanceTlPriceBtcTurk) * Numeric.PERCENTAGE_MULTIPLIER) / price
+                    } ?: Numeric.DEFAULT_DIFFERENCE
 
                 //%d ile kullanıp string dosyasına alabilir misin
                 val savedThresholdParibu = prefs.getFloat(
-                    "${coin.symbol}_threshold",
-                    Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                    "${coin.symbol}${SharedPreferencesSuffixes.THRESHOLD}",
+                    Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
                 ).toDouble()
 
                 val savedSoundLevel = prefs.getInt(
-                    "${coin.symbol}_sound_level",
-                    Constants.Numeric.DEFAULT_SOUND_LEVEL
+                    "${coin.symbol}${SharedPreferencesSuffixes.SOUND_LEVEL}",
+                    Numeric.DEFAULT_SOUND_LEVEL
                 )
 
-
-                val savedAlertActive = prefs.getBoolean("${coin.symbol}_alert_active", true)
+                val savedAlertActive = prefs.getBoolean("${coin.symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}", true)
 
                 val currentCoin = _coinDataList.value.find { it.symbol == coin.symbol }
                 val currentThreshold = currentCoin?.alertThreshold ?: savedThresholdParibu
@@ -299,19 +293,19 @@ class CryptoRepository @Inject constructor(
 
     private fun findArbitrageOpportunities(coins: List<CoinData>): List<ArbitrageOpportunity> {
         val opportunities = mutableListOf<ArbitrageOpportunity>()
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
 
         coins.forEach { coin ->
             coin.symbol?.let { symbol ->
                 coin.paribuDifference?.let { difference ->
                     val threshold = prefs.getFloat(
-                        "${symbol}_threshold",
+                        "${symbol}${SharedPreferencesSuffixes.THRESHOLD}",
                         coin.alertThreshold?.toFloat()
-                            ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                            ?: Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
                     ).toDouble()
                     val isAlertActive = prefs.getBoolean(
-                        "${symbol}_alert_active",
-                        coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE
+                        "${symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE}",
+                        coin.isAlertActive ?: Defaults.ALERT_ACTIVE
                     )
 
                     if (isAlertActive && kotlin.math.abs(difference) > threshold) {
@@ -320,7 +314,7 @@ class CryptoRepository @Inject constructor(
                                 coin = coin,
                                 exchange = Exchange.PARIBU,
                                 difference = difference,
-                                isPositive = difference > Constants.Numeric.DEFAULT_DIFFERENCE
+                                isPositive = difference > Numeric.DEFAULT_DIFFERENCE
                             )
                         )
                     }
@@ -328,13 +322,13 @@ class CryptoRepository @Inject constructor(
 
                 coin.btcturkDifference?.let { difference ->
                     val threshold = prefs.getFloat(
-                        "${symbol}_threshold_btc",
+                        "${symbol}${SharedPreferencesSuffixes.THRESHOLD_BTC}",
                         coin.alertThreshold?.toFloat()
-                            ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
+                            ?: Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
                     ).toDouble()
                     val isAlertActive = prefs.getBoolean(
-                        "${symbol}_alert_active_btc",
-                        coin.isAlertActive ?: Constants.Defaults.ALERT_ACTIVE
+                        "${symbol}${SharedPreferencesSuffixes.ALERT_ACTIVE_BTC}",
+                        coin.isAlertActive ?: Defaults.ALERT_ACTIVE
                     )
 
                     if (isAlertActive && kotlin.math.abs(difference) > threshold) {
@@ -343,7 +337,7 @@ class CryptoRepository @Inject constructor(
                                 coin = coin,
                                 exchange = Exchange.BTCTURK,
                                 difference = difference,
-                                isPositive = difference > Constants.Numeric.DEFAULT_DIFFERENCE
+                                isPositive = difference > Numeric.DEFAULT_DIFFERENCE
                             )
                         )
                     }
@@ -355,11 +349,11 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateAllSoundLevels(level: Int) {
-        val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
         prefs.edit {
             SupportedCoins.entries.forEach { coin ->
-                putInt("${coin.symbol}_sound_level", level)
-                putInt("${coin.symbol}_sound_level_btc", level)
+                putInt("${coin.symbol}${SharedPreferencesSuffixes.SOUND_LEVEL}", level)
+                putInt("${coin.symbol}${SharedPreferencesSuffixes.SOUND_LEVEL_BTC}", level)
             }
         }
 
@@ -370,7 +364,7 @@ class CryptoRepository @Inject constructor(
     }
 
     fun updateRefreshRate(rate: Float) {
-        val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        prefs.edit { putFloat("refresh_rate", rate) }
+        val prefs = context.getSharedPreferences(SharedPreferences.APP_SETTINGS, Context.MODE_PRIVATE)
+        prefs.edit { putFloat(SharedPreferences.REFRESH_RATE, rate) }
     }
 }

@@ -26,4 +26,23 @@ object Constants {
         const val ALERT_ACTIVE = false
         const val IS_POSITIVE = false
     }
+
+    object SharedPreferences {
+        const val COIN_SETTINGS = "coin_settings"
+        const val APP_SETTINGS = "app_settings"
+        const val GLOBAL_THRESHOLD = "global_threshold"
+        const val REFRESH_RATE = "refresh_rate"
+    }
+
+    object SharedPreferencesSuffixes {
+        const val THRESHOLD = "_threshold"
+        const val THRESHOLD_BTC = "_threshold_btc"
+        const val SOUND_LEVEL = "_sound_level"
+        const val SOUND_LEVEL_BTC = "_sound_level_btc"
+        const val ALERT_ACTIVE = "_alert_active"
+        const val ALERT_ACTIVE_BTC = "_alert_active_btc"
+    }
+    object Strings {
+        const val UNDERSCORE = "_"
+    }
 }
