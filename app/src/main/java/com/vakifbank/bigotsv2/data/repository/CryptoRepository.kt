@@ -1,7 +1,6 @@
 package com.vakifbank.bigotsv2.data.repository
 
 import android.content.Context
-import android.util.Log
 import androidx.core.content.edit
 import com.vakifbank.bigotsv2.data.service.BinanceApiService
 import com.vakifbank.bigotsv2.data.service.BtcTurkApiService
@@ -98,11 +97,6 @@ class CryptoRepository @Inject constructor(
 
         val opportunities = findArbitrageOpportunities(updatedList)
         _arbitrageOpportunities.value = opportunities
-    }
-
-    fun saveGlobalThreshold(threshold: Double) {
-        val prefs = context.getSharedPreferences(SharedPreferences.COIN_SETTINGS, Context.MODE_PRIVATE)
-        prefs.edit { putFloat(SharedPreferences.GLOBAL_THRESHOLD, threshold.toFloat()) }
     }
 
     fun getGlobalThreshold(): Double {

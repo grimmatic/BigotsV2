@@ -43,7 +43,6 @@ class SettingsFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // Master volume seekbar
         binding.seekBarMasterVolume.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -65,7 +64,6 @@ class SettingsFragment : Fragment() {
             }
         })
 
-        // Refresh rate seekbar
         binding.seekBarRefreshRate.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -88,7 +86,6 @@ class SettingsFragment : Fragment() {
             }
         })
 
-        // Reset button
         binding.btnResetAllSettings.setOnClickListener {
             showResetConfirmationDialog()
         }
@@ -104,11 +101,9 @@ class SettingsFragment : Fragment() {
 
     private fun updateUI(state: com.vakifbank.bigotsv2.ui.viewmodel.SettingsUiState) {
         if (!state.isLoading) {
-            // Update volume
             binding.seekBarMasterVolume.progress = state.masterVolume
             binding.tvVolumeValue.text = settingsViewModel.getVolumePercentage(state.masterVolume)
 
-            // Update refresh rate
             val progress = settingsViewModel.getProgressFromRefreshRate(state.refreshRate)
             binding.seekBarRefreshRate.progress = progress
             binding.tvRefreshRateValue.text = "${state.refreshRate}s"

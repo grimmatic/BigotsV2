@@ -24,7 +24,6 @@ class BtcturkViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(BtcturkUiState())
     val uiState: StateFlow<BtcturkUiState> = _uiState.asStateFlow()
 
-    // Search and filter states
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
@@ -141,7 +140,6 @@ class BtcturkViewModel @Inject constructor(
                 _currentSortType.value != SortType.DIFFERENCE_DESC
     }
 
-    // Search functionality
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -153,7 +151,6 @@ class BtcturkViewModel @Inject constructor(
         }
     }
 
-    // Filter functionality
     fun updateFilterType(filterType: FilterType) {
         _currentFilterType.value = filterType
     }
@@ -168,7 +165,6 @@ class BtcturkViewModel @Inject constructor(
         _currentSortType.value = SortType.DIFFERENCE_DESC
     }
 
-    // Dialog management
     fun showCoinDetailDialog(coin: CoinData) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(selectedCoin = coin)
@@ -196,7 +192,6 @@ class BtcturkViewModel @Inject constructor(
         }
     }
 
-    // Data operations
     fun refreshData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
@@ -221,11 +216,6 @@ class BtcturkViewModel @Inject constructor(
         viewModelScope.launch {
             coin.symbol?.let { repository.updateCoinSoundLevel(it, soundLevel, true) }
         }
-    }
-
-    // UI helper methods
-    fun getActiveAlertText(): String {
-        return _uiState.value.alertCount.toString()
     }
 
     fun getExchangeName(): String {
@@ -254,37 +244,6 @@ class BtcturkViewModel @Inject constructor(
             SortType.PRICE_DESC -> "Fiyat ↓"
             SortType.PRICE_ASC -> "Fiyat ↑"
         }
-    }
-
-    fun getCoinPrice(coin: CoinData): String {
-        return "₺${String.format("%.2f", coin.btcturkPrice)}"
-    }
-
-    fun getCoinDifference(coin: CoinData): String {
-        val difference = coin.btcturkDifference ?: 0.0
-        val sign = if (difference > 0) "+" else ""
-        return "$sign${String.format("%.2f", difference)}%"
-    }
-
-    fun getCoinDifferenceColor(coin: CoinData): Int {
-        val maxDifference = abs(coin.btcturkDifference ?: 0.0)
-        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
-        val isPositive = (coin.btcturkDifference ?: 0.0) > 0
-
-        return when {
-            maxDifference > alertThreshold -> {
-                if (isPositive) com.vakifbank.bigotsv2.R.color.success_color
-                else com.vakifbank.bigotsv2.R.color.error_color
-            }
-
-            else -> com.vakifbank.bigotsv2.R.color.text_secondary
-        }
-    }
-
-    fun shouldShowAlertIndicator(coin: CoinData): Boolean {
-        val maxDifference = abs(coin.btcturkDifference ?: 0.0)
-        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
-        return maxDifference > alertThreshold
     }
 }
 

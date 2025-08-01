@@ -34,8 +34,6 @@ class ParibuFragment : Fragment() {
 
     private lateinit var coinAdapter: CoinAdapter
 
-    private var previousSelectedCoin: CoinData? = null
-    private var previousShowOptionsMenu: Boolean = false
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -74,12 +72,10 @@ class ParibuFragment : Fragment() {
     }
 
     private fun setupListeners() {
-        // Search toggle
         binding.btnSearchToggle.setOnClickListener {
             paribuViewModel.toggleSearchExpansion()
         }
 
-        // Search text watcher
         binding.etSearch.addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -88,18 +84,15 @@ class ParibuFragment : Fragment() {
             }
         })
 
-        // Filter and sort buttons
         binding.btnFilter.setOnClickListener { showFilterDialog() }
         binding.btnSort.setOnClickListener { showSortDialog() }
         binding.btnClearFilters.setOnClickListener { paribuViewModel.clearAllFilters() }
 
-        // Retry button
         binding.btnRetry.setOnClickListener { mainViewModel.refreshData() }
     }
 
     private fun observeViewModels() {
         viewLifecycleOwner.lifecycleScope.launch {
-            // Observe main UI state
             paribuViewModel.uiState.collect { state ->
                 updateCoinList(state.coinList)
                 updateActiveAlertsCount(state.alertCount)
@@ -110,7 +103,6 @@ class ParibuFragment : Fragment() {
                 )
                 updateEmptyState(state.coinList, state.isLoading, state.hasActiveFilters)
 
-                // Dialog handling - BTCTurk gibi basit mantık
                 state.selectedCoin?.let { coin ->
                     if (state.showOptionsMenu) {
                         showCoinOptionsMenu(coin)
@@ -122,14 +114,12 @@ class ParibuFragment : Fragment() {
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            // Observe search expansion state
             paribuViewModel.isSearchExpanded.collect { isExpanded ->
                 updateSearchExpansion(isExpanded)
             }
         }
 
         viewLifecycleOwner.lifecycleScope.launch {
-            // Observe filter and sort states for button text updates
             paribuViewModel.currentFilterType.collect { filterType ->
                 binding.btnFilter.text = paribuViewModel.getFilterButtonText()
                 updateSearchButtonState()
@@ -276,7 +266,6 @@ class ParibuFragment : Fragment() {
             val homeFragment = parentFragment as? HomeFragment
             homeFragment?.scrollToTabSection()
         } catch (e: Exception) {
-            // Handle exception silently
         }
     }
 

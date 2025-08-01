@@ -24,7 +24,6 @@ class ParibuViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ParibuUiState())
     val uiState: StateFlow<ParibuUiState> = _uiState.asStateFlow()
 
-    // Search and filter states
     private val _searchQuery = MutableStateFlow("")
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
@@ -59,7 +58,6 @@ class ParibuViewModel @Inject constructor(
                     isLoading = false
                 )
 
-                // Apply current filters
                 applyFiltersAndSort()
             }.collect { }
         }
@@ -142,7 +140,6 @@ class ParibuViewModel @Inject constructor(
                 _currentSortType.value != SortType.DIFFERENCE_DESC
     }
 
-    // Search functionality
     fun updateSearchQuery(query: String) {
         _searchQuery.value = query
     }
@@ -154,7 +151,6 @@ class ParibuViewModel @Inject constructor(
         }
     }
 
-    // Filter functionality
     fun updateFilterType(filterType: FilterType) {
         _currentFilterType.value = filterType
     }
@@ -169,7 +165,6 @@ class ParibuViewModel @Inject constructor(
         _currentSortType.value = SortType.DIFFERENCE_DESC
     }
 
-    // Dialog management
     fun showCoinDetailDialog(coin: CoinData) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(selectedCoin = coin)
@@ -197,21 +192,6 @@ class ParibuViewModel @Inject constructor(
         }
     }
 
-    // Data operations
-    fun refreshData() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isRefreshing = true)
-            repository.fetchAllData()
-            _uiState.value = _uiState.value.copy(isRefreshing = false)
-        }
-    }
-
-    fun updateCoinAlert(coin: CoinData, isActive: Boolean) {
-        viewModelScope.launch {
-            coin.symbol?.let { repository.updateCoinAlertStatus(it, isActive, false) }
-        }
-    }
-
     fun updateCoinThreshold(coin: CoinData, threshold: Double) {
         viewModelScope.launch {
             coin.symbol?.let { repository.updateCoinThreshold(it, threshold, false) }
@@ -224,10 +204,6 @@ class ParibuViewModel @Inject constructor(
         }
     }
 
-    // UI helper methods
-    fun getActiveAlertText(): String {
-        return _uiState.value.alertCount.toString()
-    }
 
     fun getExchangeName(): String {
         return Constants.ExchangeNames.PARIBU
@@ -257,36 +233,6 @@ class ParibuViewModel @Inject constructor(
         }
     }
 
-    fun getCoinPrice(coin: CoinData): String {
-        return "₺${String.format("%.2f", coin.paribuPrice)}"
-    }
-
-    fun getCoinDifference(coin: CoinData): String {
-        val difference = coin.paribuDifference ?: 0.0
-        val sign = if (difference > 0) "+" else ""
-        return "$sign${String.format("%.2f", difference)}%"
-    }
-
-    fun getCoinDifferenceColor(coin: CoinData): Int {
-        val maxDifference = abs(coin.paribuDifference ?: 0.0)
-        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
-        val isPositive = (coin.paribuDifference ?: 0.0) > 0
-
-        return when {
-            maxDifference > alertThreshold -> {
-                if (isPositive) com.vakifbank.bigotsv2.R.color.success_color
-                else com.vakifbank.bigotsv2.R.color.error_color
-            }
-
-            else -> com.vakifbank.bigotsv2.R.color.text_secondary
-        }
-    }
-
-    fun shouldShowAlertIndicator(coin: CoinData): Boolean {
-        val maxDifference = abs(coin.paribuDifference ?: 0.0)
-        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
-        return maxDifference > alertThreshold
-    }
 }
 
 data class ParibuUiState(

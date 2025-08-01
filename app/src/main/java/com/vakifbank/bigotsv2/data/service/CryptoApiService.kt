@@ -6,10 +6,6 @@ import com.vakifbank.bigotsv2.domain.model.paribu.ParibuTicker
 import retrofit2.Response
 import retrofit2.http.GET
 
-interface CryptoApiService<T> {
-    suspend fun getTickers(): Response<T>
-}
-
 interface BinanceApiService {
     @GET("api/v3/ticker/bookTicker")
     suspend fun getBookTickers(): Response<List<BinanceTickerResponse>>
