@@ -21,6 +21,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 import javax.inject.Singleton
+import androidx.core.content.edit
 
 @Singleton
 class CryptoRepository @Inject constructor(
@@ -219,6 +220,8 @@ class CryptoRepository @Inject constructor(
 
         return SupportedCoins.values().mapNotNull { coin ->
             try {
+
+                //scope fonksiyonları kullanabiliriz?
                 val paribuPrice = paribuData[coin.paribuSymbol]?.highestBid
                     ?: Constants.Numeric.DEFAULT_PRICE
 
@@ -231,7 +234,8 @@ class CryptoRepository @Inject constructor(
                     Constants.Numeric.DEFAULT_PRICE
                 }
 
-                val btcturkPrice = btcturkData[coin.btcturkSymbol.replace("_", "")]?.bid
+                //"-" ile kullanabiliriz
+                val btcturkPrice = btcturkData[coin.btcturkSymbol.replace( oldValue = "_", newValue = Constants.Numeric.EMPTY)]?.bid
                     ?: Constants.Numeric.DEFAULT_PRICE
 
                 val binanceTlPriceBtcTurk = if (btcturkUsdtRate > Constants.Numeric.DEFAULT_PRICE) {
@@ -240,9 +244,9 @@ class CryptoRepository @Inject constructor(
                     Constants.Numeric.DEFAULT_PRICE
                 }
 
-                val paribuDifference = if (paribuPrice > Constants.Numeric.DEFAULT_PRICE) {
+                val paribuDifference = paribuPrice.takeIf { it > Constants.Numeric.DEFAULT_PRICE }?.let {
                     ((paribuPrice - binanceTlPriceParibu) * Constants.Numeric.PERCENTAGE_MULTIPLIER) / paribuPrice
-                } else {
+                } ?: run {
                     Constants.Numeric.DEFAULT_DIFFERENCE
                 }
 
@@ -252,6 +256,7 @@ class CryptoRepository @Inject constructor(
                     Constants.Numeric.DEFAULT_DIFFERENCE
                 }
 
+                //%d ile kullanıp string dosyasına alabilir misin
                 val savedThresholdParibu = prefs.getFloat(
                     "${coin.symbol}_threshold",
                     Constants.Numeric.DEFAULT_ALERT_THRESHOLD.toFloat()
@@ -265,6 +270,8 @@ class CryptoRepository @Inject constructor(
                     "${coin.symbol}_sound_level",
                     Constants.Numeric.DEFAULT_SOUND_LEVEL
                 )
+
+                //???
                 val savedSoundLevelBtc = prefs.getInt(
                     "${coin.symbol}_sound_level_btc",
                     Constants.Numeric.DEFAULT_SOUND_LEVEL
@@ -353,20 +360,14 @@ class CryptoRepository @Inject constructor(
         return opportunities.sortedByDescending { kotlin.math.abs(it.difference ?: 0.0) }
     }
 
-    fun getSupportedCoins(): List<SupportedCoins> = SupportedCoins.values().toList()
-    fun getSupportedCoinsForParibu(): List<String> = SupportedCoins.getAllParibuSymbols()
-    fun getSupportedCoinsForBtcturk(): List<String> = SupportedCoins.getAllBtcturkSymbols()
-    fun getSupportedCoinsForBinance(): List<String> = SupportedCoins.getAllBinanceSymbols()
-
     fun updateAllSoundLevels(level: Int) {
         val prefs = context.getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
-        val editor = prefs.edit()
-
-        SupportedCoins.values().forEach { coin ->
-            editor.putInt("${coin.symbol}_sound_level", level)
-            editor.putInt("${coin.symbol}_sound_level_btc", level)
+        prefs.edit {
+            SupportedCoins.entries.forEach { coin ->
+                putInt("${coin.symbol}_sound_level", level)
+                putInt("${coin.symbol}_sound_level_btc", level)
+            }
         }
-        editor.apply()
 
         val updatedList = _coinDataList.value.map { coin ->
             coin.copy(soundLevel = level)
@@ -376,6 +377,6 @@ class CryptoRepository @Inject constructor(
 
     fun updateRefreshRate(rate: Float) {
         val prefs = context.getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        prefs.edit().putFloat("refresh_rate", rate).apply()
+        prefs.edit { putFloat("refresh_rate", rate) }
     }
 }

@@ -8,6 +8,7 @@ object Constants {
         const val DEFAULT_ALERT_THRESHOLD = 2.5
         const val DEFAULT_SOUND_LEVEL = 15
         const val PERCENTAGE_MULTIPLIER = 100.0
+        const val EMPTY = ""
     }
 
     object ExchangeNames {

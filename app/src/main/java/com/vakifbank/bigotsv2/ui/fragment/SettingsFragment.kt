@@ -1,6 +1,5 @@
 package com.vakifbank.bigotsv2.ui.fragment
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,11 +7,10 @@ import android.view.ViewGroup
 import android.widget.SeekBar
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import com.vakifbank.bigotsv2.databinding.FragmentSettingsBinding
-import com.vakifbank.bigotsv2.ui.viewmodel.MainViewModel
-import com.vakifbank.bigotsv2.utils.Constants
+import com.vakifbank.bigotsv2.ui.viewmodel.SettingsViewModel
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 
@@ -21,7 +19,7 @@ class SettingsFragment : Fragment() {
     private var _binding: FragmentSettingsBinding? = null
     private val binding get() = _binding!!
 
-    private val mainViewModel: MainViewModel by activityViewModels()
+    private val settingsViewModel: SettingsViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -36,165 +34,97 @@ class SettingsFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupViews()
         setupListeners()
-        loadCurrentSettings()
+        observeViewModel()
     }
 
     private fun setupViews() {
         binding.seekBarMasterVolume.max = 15
-
         binding.seekBarRefreshRate.max = 15
     }
 
     private fun setupListeners() {
+        // Master volume seekbar
         binding.seekBarMasterVolume.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                updateVolumeText(progress)
+                if (fromUser) {
+                    binding.tvVolumeValue.text = settingsViewModel.getVolumePercentage(progress)
+                }
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
                 val volume = binding.seekBarMasterVolume.progress
-                saveVolumeSettings(volume)
+                settingsViewModel.updateMasterVolume(volume)
                 Toast.makeText(
                     requireContext(),
-                    "Ses seviyesi: ${volume * 100 / 15}%",
+                    "Ses seviyesi: ${settingsViewModel.getVolumePercentage(volume)}",
                     Toast.LENGTH_SHORT
                 ).show()
             }
         })
 
+        // Refresh rate seekbar
         binding.seekBarRefreshRate.setOnSeekBarChangeListener(object :
             SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                updateRefreshRateText(progress)
+                if (fromUser) {
+                    binding.tvRefreshRateValue.text = settingsViewModel.getRefreshRateText(progress)
+                }
             }
 
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
 
             override fun onStopTrackingTouch(seekBar: SeekBar?) {
-                val rate = getRefreshRateFromProgress(binding.seekBarRefreshRate.progress)
-                saveRefreshRateSettings(rate)
-                Toast.makeText(requireContext(), "Yenileme hızı: ${rate}s", Toast.LENGTH_SHORT)
-                    .show()
+                val progress = binding.seekBarRefreshRate.progress
+                val rate = settingsViewModel.getRefreshRateFromProgress(progress)
+                settingsViewModel.updateRefreshRate(rate)
+                Toast.makeText(
+                    requireContext(),
+                    "Yenileme hızı: ${rate}s",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
         })
 
+        // Reset button
         binding.btnResetAllSettings.setOnClickListener {
-            resetAllSettings()
+            showResetConfirmationDialog()
         }
     }
 
-    private fun loadCurrentSettings() {
-        val prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-
-        val masterVolume = prefs.getInt("master_volume", 15)
-        binding.seekBarMasterVolume.progress = masterVolume
-        updateVolumeText(masterVolume)
-
-        val refreshRate = prefs.getFloat("refresh_rate", 2.0f)
-        val progress = getProgressFromRefreshRate(refreshRate)
-        binding.seekBarRefreshRate.progress = progress
-        updateRefreshRateText(progress)
-    }
-
-    private fun updateVolumeText(volume: Int) {
-        val percentage = (volume * 100) / 15
-        binding.tvVolumeValue.text = "$percentage%"
-    }
-
-    private fun updateRefreshRateText(progress: Int) {
-        val rate = getRefreshRateFromProgress(progress)
-        binding.tvRefreshRateValue.text = "${rate}s"
-    }
-
-    private fun getRefreshRateFromProgress(progress: Int): Float {
-        return when (progress) {
-            0 -> 1.7f
-            1 -> 1.85f
-            2 -> 2.0f
-            3 -> 2.5f
-            4 -> 3.0f
-            5 -> 3.5f
-            6 -> 4.0f
-            7 -> 4.5f
-            8 -> 5.0f
-            9 -> 5.5f
-            10 -> 6.0f
-            11 -> 6.5f
-            12 -> 7.0f
-            13 -> 8.5f
-            14 -> 10.0f
-            15 -> 15.0f
-            else -> 2.0f
-        }
-    }
-
-    private fun getProgressFromRefreshRate(rate: Float): Int {
-        return when {
-            rate <= 1.7f -> 0
-            rate <= 1.85f -> 1
-            rate <= 2.0f -> 2
-            rate <= 2.5f -> 3
-            rate <= 3.0f -> 4
-            rate <= 3.5f -> 5
-            rate <= 4.0f -> 6
-            rate <= 4.5f -> 7
-            rate <= 5.0f -> 8
-            rate <= 5.5f -> 9
-            rate <= 6.0f -> 10
-            rate <= 6.5f -> 11
-            rate <= 7.0f -> 12
-            rate <= 8.5f -> 13
-            rate <= 10.0f -> 14
-            else -> 15
-        }
-    }
-
-    private fun saveVolumeSettings(volume: Int) {
-        val prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        prefs.edit().putInt("master_volume", volume).apply()
-
+    private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
-            mainViewModel.updateAllSoundLevels(volume)
+            settingsViewModel.uiState.collect { state ->
+                updateUI(state)
+            }
         }
     }
 
-    private fun saveRefreshRateSettings(rate: Float) {
-        val prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        prefs.edit().putFloat("refresh_rate", rate).apply()
+    private fun updateUI(state: com.vakifbank.bigotsv2.ui.viewmodel.SettingsUiState) {
+        if (!state.isLoading) {
+            // Update volume
+            binding.seekBarMasterVolume.progress = state.masterVolume
+            binding.tvVolumeValue.text = settingsViewModel.getVolumePercentage(state.masterVolume)
 
-        viewLifecycleOwner.lifecycleScope.launch {
-            mainViewModel.updateRefreshRate(rate)
+            // Update refresh rate
+            val progress = settingsViewModel.getProgressFromRefreshRate(state.refreshRate)
+            binding.seekBarRefreshRate.progress = progress
+            binding.tvRefreshRateValue.text = "${state.refreshRate}s"
         }
     }
 
-    private fun resetAllSettings() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            mainViewModel.setAllThresholds(Constants.Numeric.DEFAULT_ALERT_THRESHOLD)
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            mainViewModel.updateAllSoundLevels(15)
-        }
-
-        saveRefreshRateSettings(2.0f)
-
-        binding.seekBarMasterVolume.progress = 15
-        updateVolumeText(15)
-
-        binding.seekBarRefreshRate.progress = 2
-        updateRefreshRateText(2)
-
-        val prefs = requireContext().getSharedPreferences("app_settings", Context.MODE_PRIVATE)
-        prefs.edit().clear().apply()
-        prefs.edit()
-            .putInt("master_volume", 15)
-            .putFloat("refresh_rate", 2.0f)
-            .apply()
-
-        Toast.makeText(requireContext(), "Tüm ayarlar sıfırlandı", Toast.LENGTH_LONG).show()
+    private fun showResetConfirmationDialog() {
+        val builder = androidx.appcompat.app.AlertDialog.Builder(requireContext())
+        builder.setTitle("Ayarları Sıfırla")
+            .setMessage("Tüm ayarlar varsayılan değerlere döndürülecek. Bu işlem geri alınamaz. Devam etmek istiyor musunuz?")
+            .setPositiveButton("Evet") { _, _ ->
+                settingsViewModel.resetAllSettings()
+                Toast.makeText(requireContext(), "Tüm ayarlar sıfırlandı", Toast.LENGTH_LONG).show()
+            }
+            .setNegativeButton("İptal", null)
+            .show()
     }
 
     override fun onDestroyView() {

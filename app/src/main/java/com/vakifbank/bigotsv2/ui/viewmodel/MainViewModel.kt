@@ -37,7 +37,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-
     private fun observeData() {
         viewModelScope.launch {
             combine(
@@ -94,6 +93,7 @@ class MainViewModel @Inject constructor(
         } ?: 0.0
     }
 
+    // Service management
     fun toggleService(context: Context) {
         viewModelScope.launch {
             if (_uiState.value.isServiceRunning) {
@@ -104,6 +104,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    // Global settings
     fun setAllThresholds(threshold: Double) {
         viewModelScope.launch {
             repository.updateAllThresholds(threshold)
@@ -111,6 +112,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    fun updateAllSoundLevels(level: Int) {
+        viewModelScope.launch {
+            repository.updateAllSoundLevels(level)
+        }
+    }
+
+    fun updateRefreshRate(rate: Float) {
+        viewModelScope.launch {
+            repository.updateRefreshRate(rate)
+        }
+    }
+
+    // UI helper methods
     fun getFormattedUsdTryRate(): String {
         return "₺${String.format("%.3f", _uiState.value.usdTryRate)}"
     }
@@ -131,6 +145,7 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    // Data refresh
     fun refreshData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
@@ -139,29 +154,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
+    // Individual coin settings (called from fragments through their ViewModels)
     fun updateThreshold(coinSymbol: String, threshold: Double, isForBtcTurk: Boolean = false) {
         viewModelScope.launch {
             repository.updateCoinThreshold(coinSymbol, threshold, isForBtcTurk)
-        }
-    }
-
-    fun filterCoins(query: String) {
-        _uiState.value = _uiState.value.copy(searchQuery = query)
-    }
-
-    fun sortCoins(sortType: SortType) {
-        _uiState.value = _uiState.value.copy(sortType = sortType)
-    }
-
-    fun updateAllSoundLevels(level: Int) {
-        viewModelScope.launch {
-            repository.updateAllSoundLevels(level)
-        }
-    }
-
-    fun updateRefreshRate(rate: Float) {
-        viewModelScope.launch {
-            repository.updateRefreshRate(rate)
         }
     }
 }
@@ -176,16 +172,5 @@ data class MainUiState(
     val btcPriceUsd: Double = 0.0,
     val globalThreshold: Double = Constants.Numeric.DEFAULT_ALERT_THRESHOLD,
     val isLoading: Boolean = true,
-    val isRefreshing: Boolean = false,
-    val searchQuery: String = "",
-    val sortType: SortType = SortType.BY_DIFFERENCE,
-    val filterType: FilterType = FilterType.ALL
+    val isRefreshing: Boolean = false
 )
-
-enum class SortType {
-    BY_DIFFERENCE, BY_NAME, BY_PRICE, BY_VOLUME
-}
-
-enum class FilterType {
-    ALL, ALERTS_ONLY, POSITIVE_ONLY, NEGATIVE_ONLY
-}

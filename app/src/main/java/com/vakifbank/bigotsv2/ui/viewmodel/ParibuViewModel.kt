@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.math.abs
 
 @HiltViewModel
 class ParibuViewModel @Inject constructor(
@@ -23,8 +24,24 @@ class ParibuViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ParibuUiState())
     val uiState: StateFlow<ParibuUiState> = _uiState.asStateFlow()
 
+    // Search and filter states
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _currentFilterType = MutableStateFlow(FilterType.ALL)
+    val currentFilterType: StateFlow<FilterType> = _currentFilterType.asStateFlow()
+
+    private val _currentSortType = MutableStateFlow(SortType.DIFFERENCE_DESC)
+    val currentSortType: StateFlow<SortType> = _currentSortType.asStateFlow()
+
+    private val _isSearchExpanded = MutableStateFlow(false)
+    val isSearchExpanded: StateFlow<Boolean> = _isSearchExpanded.asStateFlow()
+
+    private var allCoins: List<CoinData> = emptyList()
+
     init {
         observeData()
+        observeFiltersAndSearch()
     }
 
     private fun observeData() {
@@ -33,29 +50,119 @@ class ParibuViewModel @Inject constructor(
                 repository.coinDataList,
                 repository.arbitrageOpportunities
             ) { coins, opportunities ->
-                val paribuCoins = filterParibuCoins(coins)
+                allCoins = filterParibuCoins(coins)
                 val paribuOpportunities = opportunities.filter { it.exchange == Exchange.PARIBU }
 
-                ParibuUiState(
-                    coinList = paribuCoins,
+                _uiState.value = _uiState.value.copy(
                     arbitrageOpportunities = paribuOpportunities,
                     alertCount = paribuOpportunities.size,
                     isLoading = false
                 )
-            }.collect { newState ->
-                _uiState.value = newState
-            }
+
+                // Apply current filters
+                applyFiltersAndSort()
+            }.collect { }
+        }
+    }
+
+    private fun observeFiltersAndSearch() {
+        viewModelScope.launch {
+            combine(
+                _searchQuery,
+                _currentFilterType,
+                _currentSortType
+            ) { _, _, _ ->
+                applyFiltersAndSort()
+            }.collect { }
         }
     }
 
     private fun filterParibuCoins(coins: List<CoinData>): List<CoinData> {
         return coins.filter { coin ->
-            coin.paribuPrice!! > 0 && kotlin.math.abs(coin.paribuDifference!!) >= 0.1
+            coin.paribuPrice!! > 0 && abs(coin.paribuDifference!!) >= 0.1
         }.sortedByDescending {
-            it.paribuDifference?.let { x -> kotlin.math.abs(x) }
+            it.paribuDifference?.let { x -> abs(x) }
         }
     }
 
+    private fun applyFiltersAndSort() {
+        val searchQuery = _searchQuery.value.lowercase().trim()
+
+        var filtered = if (searchQuery.isEmpty()) {
+            allCoins
+        } else {
+            allCoins.filter { coin ->
+                coin.symbol?.lowercase()?.contains(searchQuery) == true ||
+                        coin.name?.lowercase()?.contains(searchQuery) == true
+            }
+        }
+
+        filtered = when (_currentFilterType.value) {
+            FilterType.ALL -> filtered
+            FilterType.ALERTS_ONLY -> filtered.filter { coin ->
+                val difference = abs(coin.paribuDifference ?: 0.0)
+                val threshold = coin.alertThreshold ?: 2.5
+                difference > threshold
+            }
+            FilterType.POSITIVE_ONLY -> filtered.filter { coin ->
+                (coin.paribuDifference ?: 0.0) > 0
+            }
+            FilterType.NEGATIVE_ONLY -> filtered.filter { coin ->
+                (coin.paribuDifference ?: 0.0) < 0
+            }
+        }
+
+        val sortedCoins = when (_currentSortType.value) {
+            SortType.DIFFERENCE_DESC -> filtered.sortedByDescending { abs(it.paribuDifference ?: 0.0) }
+            SortType.DIFFERENCE_ASC -> filtered.sortedBy { abs(it.paribuDifference ?: 0.0) }
+            SortType.NAME_ASC -> filtered.sortedBy { it.symbol }
+            SortType.NAME_DESC -> filtered.sortedByDescending { it.symbol }
+            SortType.PRICE_DESC -> filtered.sortedByDescending { it.paribuPrice ?: 0.0 }
+            SortType.PRICE_ASC -> filtered.sortedBy { it.paribuPrice ?: 0.0 }
+        }
+
+        _uiState.value = _uiState.value.copy(
+            coinList = sortedCoins,
+            filteredCoinCount = sortedCoins.size,
+            totalCoinCount = allCoins.size,
+            hasActiveFilters = hasActiveFilters()
+        )
+    }
+
+    private fun hasActiveFilters(): Boolean {
+        return _searchQuery.value.isNotEmpty() ||
+                _currentFilterType.value != FilterType.ALL ||
+                _currentSortType.value != SortType.DIFFERENCE_DESC
+    }
+
+    // Search functionality
+    fun updateSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    fun toggleSearchExpansion() {
+        _isSearchExpanded.value = !_isSearchExpanded.value
+        if (!_isSearchExpanded.value) {
+            clearAllFilters()
+        }
+    }
+
+    // Filter functionality
+    fun updateFilterType(filterType: FilterType) {
+        _currentFilterType.value = filterType
+    }
+
+    fun updateSortType(sortType: SortType) {
+        _currentSortType.value = sortType
+    }
+
+    fun clearAllFilters() {
+        _searchQuery.value = ""
+        _currentFilterType.value = FilterType.ALL
+        _currentSortType.value = SortType.DIFFERENCE_DESC
+    }
+
+    // Dialog management
     fun showCoinDetailDialog(coin: CoinData) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(selectedCoin = coin)
@@ -83,49 +190,7 @@ class ParibuViewModel @Inject constructor(
         }
     }
 
-    fun getActiveAlertText(): String {
-        return _uiState.value.alertCount.toString()
-    }
-
-    fun getExchangeName(): String {
-        return Constants.ExchangeNames.PARIBU
-    }
-
-    fun getExchangeIcon(): Int {
-        return com.vakifbank.bigotsv2.R.drawable.paribu
-    }
-
-    fun getCoinPrice(coin: CoinData): String {
-        return "₺${String.format("%.2f", coin.paribuPrice)}"
-    }
-
-    fun getCoinDifference(coin: CoinData): String {
-        val difference = coin.paribuDifference ?: 0.0
-        val sign = if (difference > 0) "+" else ""
-        return "$sign${String.format("%.2f", difference)}%"
-    }
-
-    fun getCoinDifferenceColor(coin: CoinData): Int {
-        val maxDifference = kotlin.math.abs(coin.paribuDifference ?: 0.0)
-        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
-        val isPositive = (coin.paribuDifference ?: 0.0) > 0
-
-        return when {
-            maxDifference > alertThreshold -> {
-                if (isPositive) com.vakifbank.bigotsv2.R.color.success_color
-                else com.vakifbank.bigotsv2.R.color.error_color
-            }
-
-            else -> com.vakifbank.bigotsv2.R.color.text_secondary
-        }
-    }
-
-    fun shouldShowAlertIndicator(coin: CoinData): Boolean {
-        val maxDifference = kotlin.math.abs(coin.paribuDifference ?: 0.0)
-        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
-        return maxDifference > alertThreshold
-    }
-
+    // Data operations
     fun refreshData() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isRefreshing = true)
@@ -151,6 +216,69 @@ class ParibuViewModel @Inject constructor(
             coin.symbol?.let { repository.updateCoinSoundLevel(it, soundLevel, false) }
         }
     }
+
+    // UI helper methods
+    fun getActiveAlertText(): String {
+        return _uiState.value.alertCount.toString()
+    }
+
+    fun getExchangeName(): String {
+        return Constants.ExchangeNames.PARIBU
+    }
+
+    fun getExchangeIcon(): Int {
+        return com.vakifbank.bigotsv2.R.drawable.paribu
+    }
+
+    fun getFilterButtonText(): String {
+        return when (_currentFilterType.value) {
+            FilterType.ALL -> "Tümü"
+            FilterType.ALERTS_ONLY -> "Alarmlar"
+            FilterType.POSITIVE_ONLY -> "Pozitif Fark"
+            FilterType.NEGATIVE_ONLY -> "Negatif Fark"
+        }
+    }
+
+    fun getSortButtonText(): String {
+        return when (_currentSortType.value) {
+            SortType.DIFFERENCE_DESC -> "Fark % ↓"
+            SortType.DIFFERENCE_ASC -> "Fark % ↑"
+            SortType.NAME_ASC -> "İsim ↓"
+            SortType.NAME_DESC -> "İsim ↑"
+            SortType.PRICE_DESC -> "Fiyat ↓"
+            SortType.PRICE_ASC -> "Fiyat ↑"
+        }
+    }
+
+    fun getCoinPrice(coin: CoinData): String {
+        return "₺${String.format("%.2f", coin.paribuPrice)}"
+    }
+
+    fun getCoinDifference(coin: CoinData): String {
+        val difference = coin.paribuDifference ?: 0.0
+        val sign = if (difference > 0) "+" else ""
+        return "$sign${String.format("%.2f", difference)}%"
+    }
+
+    fun getCoinDifferenceColor(coin: CoinData): Int {
+        val maxDifference = abs(coin.paribuDifference ?: 0.0)
+        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
+        val isPositive = (coin.paribuDifference ?: 0.0) > 0
+
+        return when {
+            maxDifference > alertThreshold -> {
+                if (isPositive) com.vakifbank.bigotsv2.R.color.success_color
+                else com.vakifbank.bigotsv2.R.color.error_color
+            }
+            else -> com.vakifbank.bigotsv2.R.color.text_secondary
+        }
+    }
+
+    fun shouldShowAlertIndicator(coin: CoinData): Boolean {
+        val maxDifference = abs(coin.paribuDifference ?: 0.0)
+        val alertThreshold = coin.alertThreshold ?: Constants.Numeric.DEFAULT_ALERT_THRESHOLD
+        return maxDifference > alertThreshold
+    }
 }
 
 data class ParibuUiState(
@@ -160,5 +288,8 @@ data class ParibuUiState(
     val selectedCoin: CoinData? = null,
     val showOptionsMenu: Boolean = false,
     val isLoading: Boolean = true,
-    val isRefreshing: Boolean = false
+    val isRefreshing: Boolean = false,
+    val filteredCoinCount: Int = 0,
+    val totalCoinCount: Int = 0,
+    val hasActiveFilters: Boolean = false
 )

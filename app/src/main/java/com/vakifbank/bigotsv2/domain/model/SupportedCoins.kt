@@ -55,12 +55,13 @@ enum class SupportedCoins(
     BTC("BTC", "Bitcoin", "BTC_TL", "BTCTRY", "BTCUSDT"),
     ETH("ETH", "Ethereum", "ETH_TL", "ETHTRY", "ETHUSDT");
 
+    //????
     companion object {
-        fun getAllParibuSymbols(): List<String> = values().map { it.paribuSymbol }
+        fun getAllParibuSymbols(): List<String> = entries.map { it.paribuSymbol }
 
-        fun getAllBtcturkSymbols(): List<String> = values().map { it.btcturkSymbol }
+        fun getAllBtcturkSymbols(): List<String> = entries.map { it.btcturkSymbol }
 
-        fun getAllBinanceSymbols(): List<String> = values().map { it.binanceSymbol }
+        fun getAllBinanceSymbols(): List<String> = entries.map { it.binanceSymbol }
 
         fun getBySymbol(symbol: String): SupportedCoins? = values().find { it.symbol == symbol }
 

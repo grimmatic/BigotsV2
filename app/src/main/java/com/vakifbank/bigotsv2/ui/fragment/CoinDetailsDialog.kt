@@ -212,8 +212,8 @@ class CoinDetailsDialog : DialogFragment() {
                 if (isFromBtcTurk) {
                     val btcTurkSymbol = symbol.lowercase() + "try"
                     val url = if (isTrade) {
-                        // "btcturkpro://host/trade/$btcTurkSymbol"
-                        "btcturkpro://deeplink?screenId=TRADE_BTCTRY"
+                         "btcturkpro://host/trade/$btcTurkSymbol"
+                        //"btcturkpro://deeplink?screenId=TRADE_BTCTRY"
 
                         //web sayfası intenti =                         "https://kripto.btcturk.com/pro/al-sat/NEO_TRY"
                     } else {

@@ -129,7 +129,7 @@ class ArbitrageService : Service() {
             while (isActive) {
                 try {
                     repository.fetchAllData()
-                    val prefs = getSharedPreferences("app_settings", Context.MODE_PRIVATE)
+                    val prefs = getSharedPreferences("app_settings", MODE_PRIVATE)
                     val refreshRate = prefs.getFloat("refresh_rate", 2.0f)
                     delay((refreshRate * 1000).toLong())
                 } catch (e: Exception) {
@@ -158,7 +158,7 @@ class ArbitrageService : Service() {
     }
 
     private fun updateCurrentOpportunities(opportunities: List<ArbitrageOpportunity>) {
-        val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("coin_settings", MODE_PRIVATE)
         previousPlayingOpportunities.clear()
         previousPlayingOpportunities.putAll(currentlyPlayingOpportunities)
         currentlyPlayingOpportunities.clear()
@@ -230,7 +230,7 @@ class ArbitrageService : Service() {
             return
         }
 
-        val prefs = getSharedPreferences("coin_settings", Context.MODE_PRIVATE)
+        val prefs = getSharedPreferences("coin_settings", MODE_PRIVATE)
 
 
         currentlyPlayingOpportunities.values.forEach { opportunity ->
